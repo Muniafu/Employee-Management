@@ -26,7 +26,7 @@ function Home() {
 
       <footer className="footer">
         <p>
-          ©{new Date().getFullYear()} <a href="https://yourcompany.com" target="_blank" rel="noopener noreferrer">Employee Performance</a>. All rights reserved.
+          ©{new Date().getFullYear()}<a href="https://yourcompany.com" target="_blank" rel="noopener noreferrer">elamuniafu</a>All rights reserved.
         </p>
       </footer>
     </div>    
