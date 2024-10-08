@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './Analytics.css';
 
 function Analytics() {
   const [employees, setEmployees] = useState([]);
@@ -18,8 +19,8 @@ function Analytics() {
   }, []);
 
   return (
-    <div>
-      <h2>Analytics Dashboard</h2>
+    <div className="analytics">
+      <h2 className="analytics-title">Analytics Dashboard</h2>
       {employees.length > 0 ? (
         <table className="table">
           <thead>
