@@ -3,5 +3,9 @@
         "activityBar.background": "#2B2B43",
         "titleBar.activeBackground": "#3D3D5E",
         "titleBar.activeForeground": "#FBFBFD"
-    }
+    },
+    "cSpell.words": [
+        "noopener",
+        "noreferrer"
+    ]
 }

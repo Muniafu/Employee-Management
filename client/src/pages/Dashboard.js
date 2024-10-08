@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../components/Header';
 import './Dashboard.css';
 
 function Dashboard() {
   const [employee, setEmployee] = useState(null);
-  const email = "employee@example.com"; // Simulate logged-in employee's email
+  const email = "employee@example.com";
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEmployee = async () => {
@@ -23,6 +26,10 @@ function Dashboard() {
     fetchEmployee();
   }, []);
 
+  const handleSignOut = () => {
+    navigate('/login');
+  };
+
   return (
     <div className="dashboard">
       <h2 className="dashboard-title">Employee Dashboard</h2>
@@ -37,6 +44,19 @@ function Dashboard() {
       ) : (
         <p>Loading employee data...</p>
       )}
+
+<div className="button">
+        <button onClick={handleSignOut} className="btn btn-outline-danger signOut">
+          Sign Out
+        </button>
+      </div>
+
+      <footer className="footer">
+        <p>
+          ©{new Date().getFullYear()} <a href="https://yourcompany.com" target="_blank" rel="noopener noreferrer">Employee Performance</a>. All rights reserved.
+        </p>
+      </footer>
+
     </div>
   );
 }

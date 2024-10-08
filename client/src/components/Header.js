@@ -6,8 +6,7 @@ function Header() {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    // Logic to handle sign out (if needed, e.g., clearing local storage)
-    navigate('/login');  // Redirect to login page
+    navigate('/');
   };
   return (
     <nav className="navbar navbar-expand-lg">
@@ -19,12 +18,6 @@ function Header() {
               <Link className="nav-link" to="/">Home</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/signup">Signup</Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/login">Login</Link>
-            </li>
-            <li className="nav-item">
               <Link className="nav-link" to="/dashboard">Dashboard</Link>
             </li>
             <li className="nav-item">
@@ -32,7 +25,7 @@ function Header() {
             </li>
           </ul>
         </div>
-        <button onClick={handleSignOut} className="btn btn-outline-danger">
+        <button onClick={handleSignOut} className="btn-header btn-outline-danger">
           Sign Out
         </button>
       </div>

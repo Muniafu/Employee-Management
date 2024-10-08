@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './Analytics.css';
 
 function Analytics() {
   const [employees, setEmployees] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -17,6 +19,10 @@ function Analytics() {
 
     fetchEmployees();
   }, []);
+
+  const handleSignOut = () => {
+    navigate('/login');
+  };
 
   return (
     <div className="analytics">
@@ -47,6 +53,17 @@ function Analytics() {
       ) : (
         <p>No employee data found</p>
       )}
+      <div className="button">
+        <button onClick={handleSignOut} className="btn btn-outline-danger signOut">
+          Sign Out
+        </button>
+      </div>
+
+      <footer className="footer">
+        <p>
+          ©{new Date().getFullYear()} <a href="https://yourcompany.com" target="_blank" rel="noopener noreferrer">Employee Performance</a>. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }

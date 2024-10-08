@@ -10,7 +10,7 @@
 }
 
 .navbar-nav .nav-link {
-    flex-grow: 5;
+    flex-grow: 1;
     text-align: center;
 }
 
@@ -18,8 +18,8 @@
     color: #f8f9fa !important;
     font-size: 1.2rem;
     text-transform: uppercase;
-    padding: 10px 15px;    
-    margin-left: 90px; 
+    padding: 10px 5px;    
+    margin-left: 100px; 
 }
 
 .nav-link:hover {
@@ -27,15 +27,16 @@
     text-decoration: none;
 }
 
-.btn {
+.btn-header {
     background-color: #dc3545;
     color: #fff !important;
     font-size: 15px;
     padding: 8px 15px;
     text-transform: uppercase;
+    border-radius: 15px;
 }
 
-.btn:hover {
+.btn-header:hover {
     background-color: #c82333 !important;
     border-color: #bd2130; 
 }  

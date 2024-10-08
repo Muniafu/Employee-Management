@@ -57,4 +57,40 @@
         max-width: 100%;
         padding: 15px;
     }
-}  
+}
+
+.button {
+    text-align: center;
+    margin-top: 20px;
+    color: #fff;
+    background-color: #dc3545;
+}
+
+.signOut {
+    padding: 10px 20px;
+    font-size: 16px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.button:hover {
+    background-color: #9e2430;
+    color: #fff; 
+}
+
+.footer {
+    text-align: center;
+    padding: 10px 0;
+    background-color: #f1f1f1;
+    color: #777;
+    margin-top: 30px;
+}
+
+.footer a {
+    color: #007bff;
+    text-align: center;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
