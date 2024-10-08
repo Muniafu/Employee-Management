@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Login.css';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,12 +20,14 @@ function Login() {
     } catch (error) {
       console.error('Error during login', error);
     }
+
+    navigate('/dashboard');
   };
 
   return (
-    <div>
+    <div className="login">
       <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="login-form" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="Email"
@@ -30,7 +35,11 @@ function Login() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <button type="submit">Login</button>
+
+        <p>
+          <Link to="/signup" className="link">Don't have an account ? </Link>
+        </p>
+        <button className="login-btn" type="submit">Login</button>
       </form>
     </div>
   );
