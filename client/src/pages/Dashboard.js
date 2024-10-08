@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './Dashboard.css';
 
 function Dashboard() {
   const [employee, setEmployee] = useState(null);
@@ -23,10 +24,10 @@ function Dashboard() {
   }, []);
 
   return (
-    <div>
-      <h2>Employee Dashboard</h2>
+    <div className="dashboard">
+      <h2 className="dashboard-title">Employee Dashboard</h2>
       {employee ? (
-        <div>
+        <div className="employee-info">
           <p><strong>Name:</strong> {employee.name}</p>
           <p><strong>Email:</strong> {employee.email}</p>
           <p><strong>Goals:</strong> {employee.goals}</p>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './Signup.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Signup() {
   const [name, setName] = useState('');
@@ -9,6 +9,7 @@ function Signup() {
   const [goals, setGoals] = useState('');
   const [progress, setProgress] = useState('');
   const [evaluationScore, setEvaluationScore] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +21,8 @@ function Signup() {
     } catch (error) {
       console.error('Error adding employee', error);
     }
+
+    navigate('/login');
   };
 
   return (
