@@ -1,9 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import './Header.css';
 
 function Header() {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    // Logic to handle sign out (if needed, e.g., clearing local storage)
+    navigate('/login');  // Redirect to login page
+  };
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+    <nav className="navbar navbar-expand-lg">
       <div className="container-fluid">
         <Link className="navbar-brand" to="/">Employee Performance</Link>
         <div className="collapse navbar-collapse" id="navbarNav">
@@ -25,6 +32,9 @@ function Header() {
             </li>
           </ul>
         </div>
+        <button onClick={handleSignOut} className="btn btn-outline-danger">
+          Sign Out
+        </button>
       </div>
     </nav>
   );
