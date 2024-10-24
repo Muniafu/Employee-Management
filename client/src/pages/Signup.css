@@ -1,17 +1,21 @@
+
 .signup {
-    background-color: #f2f2f2;
     width: 100%;
     max-width: 400px;
     margin: 50px auto;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 10px 20px 30px #24c048;
-    text-align: center;    
-    transition: box-shadow 0.5s ease;
+    box-shadow: 10px 20px 30px rgb(36, 192, 72, 0.5);
+    text-align: center;
+    transition: transform 0.4s ease-in-out, box-shadow 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .signup:hover {
-    box-shadow: -30px 0px 20px #24c048;
+    box-shadow: -30px 0px -10px rgb(36, 192, 72, 0.2);
+    transform: scale(1.05);
 }
 
 h2 {
@@ -23,14 +27,19 @@ h2 {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+    transition: border-color 0.3s ease;
 }
 
 .signup-form input:focus {
     border-color: #007bff;
     outline: none;
+}
+
+.signup-form input:hover {
+    border-color: #66a6ff;
 }
 
 .sign-btn {
@@ -44,10 +53,12 @@ h2 {
     cursor: pointer;
     margin-top: 10px;    
     text-transform: uppercase;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .sign-btn:hover {
     background-color: #218838;
+    transform: translateY(-2px);
 }
 
 p {
@@ -58,8 +69,20 @@ p {
 .link {
     color: #007bff;
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .link:hover {
     text-decoration: underline;
 }  
+
+@media (max-width: 768px) {
+    .signup {
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+
+    button.sign-btn {
+        font-size: 0.9rem;
+    }
+}

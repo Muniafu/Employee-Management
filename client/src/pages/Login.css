@@ -1,3 +1,4 @@
+
 .login {
     background-color: #ffff; 
     width: 100%;
@@ -5,12 +6,13 @@
     margin: 100px auto;
     padding: 70px;
     border-radius: 50px;
-    box-shadow: 10px 20px 30px #f803037e;
+    box-shadow: 5px 10px 15px #f803037e;
     transition: box-shadow 0.3s ease;
 }
 
 .login:hover {
-    box-shadow: -30px 10px 20px #f803037e;
+    box-shadow: -10px 10px -5px #f803037e;
+    transform: scale(1.05);
 }
 
 h2 {
@@ -21,7 +23,7 @@ h2 {
 
 .login input {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 15px;
     border: 1px solid #f803039c;
     border-radius: 5px;
@@ -38,7 +40,7 @@ h2 {
 
 .login-btn {
     width: 100%;
-    padding: 10px;
+    padding: 12px 20px;
     background-color: #007bff;
     color: white;
     border: none;
@@ -52,6 +54,7 @@ h2 {
 .login-btn:hover {
     background-color: #0360c4;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
 }
 
 p {
@@ -66,6 +69,34 @@ p {
 }
 
 .link:hover {
-    color: #0056b3;
+    color: #000000;
     text-decoration: underline;
+}
+
+@keyframes formFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    display: flex;
+    justify-content: center;
+    color: white;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+    .login-form {
+        padding: 20px;
+    }
+
+    .login-btn {
+        padding: 10px;
+    }
 }
