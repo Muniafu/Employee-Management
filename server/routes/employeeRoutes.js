@@ -1,42 +1,46 @@
-const express = require('express');
+import express from 'express';
+import { authenticate, selfOrAdmin } from '../middleware/authMiddleware.js';
+import { validate } from '../middleware/validateRequest.js';
+import EmployeeController from '../controllers/employeeController.js';
+import { PerformanceSchemas } from '../middleware/validateRequest.js';
+
 const router = express.Router();
-const Employee = require('../models/Employee');
 
-// Create new employee
-router.post('/add', async (req, res) => {
-    const newEmployee = new Employee(req.body);
-    try {
-        const employee = await newEmployee.save();
-        res.status(200).json(employee);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// Apply authentication to all employee routes
+router.use(authenticate);
 
-// Get all employees (for analytics)
-router.get('/', async (req, res) => {
-    try {
-        const employees = await Employee.find();
-        res.status(200).json(employees);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// Profile management
+router.route('/profile')
+  .get(EmployeeController.getProfile)
+  .patch(
+    validate(PerformanceSchemas.updateProfile),
+    EmployeeController.updateProfile
+  );
 
-// Get employee by email (for login)
-router.get('/', async (req, res) => {
-    const email = req.query.email;
-    try {
-      if (email) {
-        const employee = await Employee.find({ email });
-        res.status(200).json(employee);
-      } else {
-        const employees = await Employee.find();
-        res.status(200).json(employees);
-      }
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-});
+// Performance reviews
+router.route('/performance-reviews')
+  .get(EmployeeController.getPerformanceReviews)
+  .post(
+    validate(PerformanceSchemas.selfReview),
+    EmployeeController.submitSelfReview
+  );
 
-module.exports = router;
+// Goals tracking
+router.route('/goals')
+  .get(EmployeeController.getGoals)
+  .post(
+    validate(PerformanceSchemas.createGoal),
+    EmployeeController.createGoal
+  );
+
+router.route('/goals/:id')
+  .patch(
+    validate(PerformanceSchemas.updateGoal),
+    EmployeeController.updateGoal
+  )
+  .delete(EmployeeController.deleteGoal);
+
+// Special endpoint for employee's own data access
+router.get('/:id', selfOrAdmin(), EmployeeController.getEmployee);
+
+export default router;
