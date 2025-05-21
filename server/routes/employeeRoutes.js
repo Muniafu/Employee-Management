@@ -1,46 +1,72 @@
-import express from 'express';
-import { authenticate, selfOrAdmin } from '../middleware/authMiddleware.js';
-import { validate } from '../middleware/validateRequest.js';
-import EmployeeController from '../controllers/employeeController.js';
-import { PerformanceSchemas } from '../middleware/validateRequest.js';
+const {Router} = require("express");
+const {UserModel} = require("../model/user.model");
+const jwt = require("jsonwebtoken");
+require("dotenv").config;
 
-const router = express.Router();
+let EmployeeRouter = Router();
+const privateKey = process.env.PRIVATEKEY;
 
-// Apply authentication to all employee routes
-router.use(authenticate);
+EmployeeRouter.get("/allempolyees", async (req, res) => {
+  try {
+    let AllEmployeedata = await UserModel.find({isAdmin:false});
+    res
+      .status(200)
+      .send({masg: "All Employee Data", Employees: AllEmployeedata});
+  } catch (er) {
+    res.status(204).send({msg: "No Data Found ", Data: null});
+  }
+});
 
-// Profile management
-router.route('/profile')
-  .get(EmployeeController.getProfile)
-  .patch(
-    validate(PerformanceSchemas.updateProfile),
-    EmployeeController.updateProfile
-  );
 
-// Performance reviews
-router.route('/performance-reviews')
-  .get(EmployeeController.getPerformanceReviews)
-  .post(
-    validate(PerformanceSchemas.selfReview),
-    EmployeeController.submitSelfReview
-  );
+EmployeeRouter.get("/singleemployee",async (req, res) => {
+  let {user_id} = req.headers;
+  let _id=user_id
+  console.log(user_id)
+  try {
+      let EmployeeInfo = await UserModel.findById({_id: user_id});
+      res.status(200).send(
+      EmployeeInfo,
+    );
+    console.log(EmployeeInfo)
+  } catch (err) {
+    res.send({msg: "Something Wents Wrong"});
+  }
+});
 
-// Goals tracking
-router.route('/goals')
-  .get(EmployeeController.getGoals)
-  .post(
-    validate(PerformanceSchemas.createGoal),
-    EmployeeController.createGoal
-  );
+EmployeeRouter.get("/employeeprofile",async (req, res) => {
+  let {token} = req.headers;
+  try {
+    jwt.verify(token, privateKey, async function (err, decoded) {
+      let user_id = decoded.user_id;
+      let EmployeeInfo = await UserModel.findById({_id: user_id});
+      res.status(200).send(
+      EmployeeInfo
+    );
+    console.log(EmployeeInfo)
+    })
+    
+  } catch (err) {
+    res.send({msg: "Something Wents Wrong"});
+  }
+});
 
-router.route('/goals/:id')
-  .patch(
-    validate(PerformanceSchemas.updateGoal),
-    EmployeeController.updateGoal
-  )
-  .delete(EmployeeController.deleteGoal);
 
-// Special endpoint for employee's own data access
-router.get('/:id', selfOrAdmin(), EmployeeController.getEmployee);
+EmployeeRouter.delete("/deleteemployee",async (req, res) => {
+  let {user_id} = req.headers;
+  console.log(user_id)
+  try {
+      let DeletedData = await UserModel.findByIdAndDelete({_id: user_id});
 
-export default router;
+      
+
+    // let AllEmployeedata = await UserModel.find({isAdmin:false});
+    //   res.send({
+    //     msg:"Employee Data Deleted Sucessfully",data:AllEmployeedata
+    // });
+    console.log(AllEmployeedata)
+  } catch (err) {
+    res.send({msg: "Something Wents Wrong"});
+  }
+});
+
+module.exports = {EmployeeRouter};
