@@ -1,72 +1,74 @@
-const {Router} = require("express");
-const {UserModel} = require("../model/user.model");
-const jwt = require("jsonwebtoken");
-require("dotenv").config;
+const express = require('express');
+const { body } = require('express-validator');
+const {
+  authenticate,
+  authorize,
+  injectModel,
+  checkOwnership
+} = require('../middleware/auth');
+const validateRequest = require('../middleware/validation');
+const employeeController = require('../controllers/employeeController');
+const Employee = require('../models/Employee');
 
-let EmployeeRouter = Router();
-const privateKey = process.env.PRIVATEKEY;
+const router = express.Router();
 
-EmployeeRouter.get("/allempolyees", async (req, res) => {
-  try {
-    let AllEmployeedata = await UserModel.find({isAdmin:false});
-    res
-      .status(200)
-      .send({masg: "All Employee Data", Employees: AllEmployeedata});
-  } catch (er) {
-    res.status(204).send({msg: "No Data Found ", Data: null});
-  }
-});
+// Apply authentication to all routes
+router.use(authenticate);
 
+// Reusable validation chains
+const employeeValidation = [
+  body('name').notEmpty().trim().withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('position').notEmpty().trim().withMessage('Position is required'),
+  body('department').optional().trim(),
+  body('managerId').optional().isMongoId()
+];
 
-EmployeeRouter.get("/singleemployee",async (req, res) => {
-  let {user_id} = req.headers;
-  let _id=user_id
-  console.log(user_id)
-  try {
-      let EmployeeInfo = await UserModel.findById({_id: user_id});
-      res.status(200).send(
-      EmployeeInfo,
-    );
-    console.log(EmployeeInfo)
-  } catch (err) {
-    res.send({msg: "Something Wents Wrong"});
-  }
-});
+const partialEmployeeValidation = [
+  body('name').optional().notEmpty().trim(),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('position').optional().notEmpty().trim(),
+  body('department').optional().trim(),
+  body('managerId').optional().isMongoId()
+];
 
-EmployeeRouter.get("/employeeprofile",async (req, res) => {
-  let {token} = req.headers;
-  try {
-    jwt.verify(token, privateKey, async function (err, decoded) {
-      let user_id = decoded.user_id;
-      let EmployeeInfo = await UserModel.findById({_id: user_id});
-      res.status(200).send(
-      EmployeeInfo
-    );
-    console.log(EmployeeInfo)
-    })
-    
-  } catch (err) {
-    res.send({msg: "Something Wents Wrong"});
-  }
-});
+// Route definitions
+router.route('/')
+  .get(authorize('admin', 'manager'), employeeController.getAllEmployees)
+  .post(
+    authorize('admin', 'manager'),
+    employeeValidation,
+    validateRequest,
+    employeeController.createEmployee
+  );
 
+router.route('/:id')
+  .get(
+    authorize('admin', 'manager', 'hr'),
+    injectModel(Employee),
+    checkOwnership('employee'),
+    employeeController.getEmployeeById
+  )
+  .put(
+    authorize('admin', 'manager'),
+    injectModel(Employee),
+    checkOwnership('employee'),
+    partialEmployeeValidation,
+    validateRequest,
+    employeeController.updateEmployee
+  )
+  .delete(
+    authorize('admin'),
+    injectModel(Employee),
+    employeeController.deleteEmployee
+  );
 
-EmployeeRouter.delete("/deleteemployee",async (req, res) => {
-  let {user_id} = req.headers;
-  console.log(user_id)
-  try {
-      let DeletedData = await UserModel.findByIdAndDelete({_id: user_id});
+// Specialized routes
+router.get(
+  '/team/:managerId',
+  authorize('admin', 'manager'),
+  injectModel(Employee),
+  employeeController.getTeamHierarchy
+);
 
-      
-
-    // let AllEmployeedata = await UserModel.find({isAdmin:false});
-    //   res.send({
-    //     msg:"Employee Data Deleted Sucessfully",data:AllEmployeedata
-    // });
-    console.log(AllEmployeedata)
-  } catch (err) {
-    res.send({msg: "Something Wents Wrong"});
-  }
-});
-
-module.exports = {EmployeeRouter};
+module.exports = router;
