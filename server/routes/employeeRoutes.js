@@ -1,74 +1,55 @@
-const express = require('express');
-const { body } = require('express-validator');
-const {
-  authenticate,
-  authorize,
-  injectModel,
-  checkOwnership
-} = require('../middleware/auth');
-const validateRequest = require('../middleware/validation');
-const employeeController = require('../controllers/employeeController');
-const Employee = require('../models/Employee');
+import express from 'express';
+import EmployeeController from '../controllers/employeeController.js';
+import { authenticate, restrictTo } from '../middleware/auth.js';
+import validate from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(authenticate);
+router.use(authenticate); // All routes require authentication
 
-// Reusable validation chains
-const employeeValidation = [
-  body('name').notEmpty().trim().withMessage('Name is required'),
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('position').notEmpty().trim().withMessage('Position is required'),
-  body('department').optional().trim(),
-  body('managerId').optional().isMongoId()
-];
-
-const partialEmployeeValidation = [
-  body('name').optional().notEmpty().trim(),
-  body('email').optional().isEmail().normalizeEmail(),
-  body('position').optional().notEmpty().trim(),
-  body('department').optional().trim(),
-  body('managerId').optional().isMongoId()
-];
-
-// Route definitions
-router.route('/')
-  .get(authorize('admin', 'manager'), employeeController.getAllEmployees)
-  .post(
-    authorize('admin', 'manager'),
-    employeeValidation,
-    validateRequest,
-    employeeController.createEmployee
-  );
-
-router.route('/:id')
-  .get(
-    authorize('admin', 'manager', 'hr'),
-    injectModel(Employee),
-    checkOwnership('employee'),
-    employeeController.getEmployeeById
-  )
-  .put(
-    authorize('admin', 'manager'),
-    injectModel(Employee),
-    checkOwnership('employee'),
-    partialEmployeeValidation,
-    validateRequest,
-    employeeController.updateEmployee
-  )
-  .delete(
-    authorize('admin'),
-    injectModel(Employee),
-    employeeController.deleteEmployee
-  );
-
-// Specialized routes
-router.get(
-  '/team/:managerId',
-  authorize('admin', 'manager'),
-  injectModel(Employee),
-  employeeController.getTeamHierarchy
+router.post(
+  '/',
+  restrictTo('admin', 'manager'),
+  validate([
+    body('firstName').trim().notEmpty(),
+    body('lastName').trim().notEmpty(),
+    body('department').isIn(['Engineering', 'HR', 'Marketing', 'Sales', 'Finance', 'Operations']),
+    body('position').trim().notEmpty(),
+    body('user').isMongoId()
+  ]),
+  EmployeeController.createEmployee
 );
 
-module.exports = router;
+router.get(
+  '/',
+  restrictTo('admin', 'manager', 'employee'),
+  EmployeeController.getAllEmployees
+);
+
+router.get(
+  '/:id',
+  validate([param('id').isMongoId()]),
+  restrictTo('admin', 'manager', 'employee'),
+  EmployeeController.getEmployee
+);
+
+router.get(
+  '/:id/stats',
+  validate([param('id').isMongoId()]),
+  restrictTo('admin', 'manager'),
+  EmployeeController.getEmployeeStats
+);
+
+router.patch(
+  '/:id',
+  validate([
+    param('id').isMongoId(),
+    body('firstName').optional().trim().notEmpty(),
+    body('lastName').optional().trim().notEmpty(),
+    body('status').optional().isIn(['active', 'on-leave', 'terminated', 'retired'])
+  ]),
+  restrictTo('admin', 'manager'),
+  EmployeeController.updateEmployee
+);
+
+export default router;

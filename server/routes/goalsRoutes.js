@@ -1,70 +1,59 @@
-const express = require('express');
-const { body } = require('express-validator');
-const {
-  authenticate,
-  authorize,
-  injectModel,
-  checkOwnership
-} = require('../middleware/auth');
-const validateRequest = require('../middleware/validation');
-const goalController = require('../controllers/goalController');
-const Goal = require('../models/Goal');
+import express from 'express';
+import GoalController from '../controllers/goalController.js';
+import { authenticate, restrictTo } from '../middleware/auth.js';
+import validate from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(authenticate);
+router.use(authenticate); // All routes require authentication
 
-// Reusable validation chains
-const goalValidation = [
-  body('title').notEmpty().trim().withMessage('Title is required'),
-  body('description').optional().isString().trim().withMessage('Description must be text'),
-  body('targetDate').optional().isISO8601().toDate().withMessage('Invalid date format'),
-  body('progress').optional().isInt({ min: 0, max: 100 }).withMessage('Progress must be 0-100')
-];
-
-const goalProgressValidation = [
-  body('progress').isInt({ min: 0, max: 100 }).withMessage('Progress must be 0-100')
-];
-
-// Route definitions
-router.route('/')
-  .get(goalController.getAllGoals)
-  .post(
-    authorize('admin', 'manager'),
-    goalValidation,
-    validateRequest,
-    goalController.createGoal
-  );
-
-router.route('/:id')
-  .get(
-    injectModel(Goal),
-    checkOwnership('employee'),
-    goalController.getGoalById
-  )
-  .patch(
-    injectModel(Goal),
-    authorize('admin', 'manager'),
-    checkOwnership('employee'),
-    goalValidation,
-    validateRequest,
-    goalController.updateGoal
-  )
-  .delete(
-    authorize('admin'),
-    injectModel(Goal),
-    goalController.deleteGoal
-  );
-
-// Specialized progress update route
-router.patch(
-  '/:id/progress',
-  injectModel(Goal),
-  checkOwnership('employee'),
-  goalProgressValidation,
-  validateRequest,
-  goalController.updateGoalProgress
+router.post(
+  '/',
+  restrictTo('manager', 'employee'),
+  validate([
+    body('employee').isMongoId(),
+    body('title').trim().notEmpty(),
+    body('targetDate').isISO8601(),
+    body('description').optional().trim(),
+    body('keyResults').optional().isArray()
+  ]),
+  GoalController.createGoal
 );
 
-module.exports = router;
+router.get(
+  '/employee/:employeeId',
+  validate([param('employeeId').isMongoId()]),
+  restrictTo('admin', 'manager', 'employee'),
+  GoalController.getEmployeeGoals
+);
+
+router.patch(
+  '/:id',
+  validate([
+    param('id').isMongoId(),
+    body('title').optional().trim().notEmpty(),
+    body('targetDate').optional().isISO8601(),
+    body('status').optional().isIn(['not-started', 'in-progress', 'completed', 'cancelled'])
+  ]),
+  restrictTo('manager', 'employee'),
+  GoalController.updateGoal
+);
+
+router.patch(
+  '/:id/progress',
+  validate([
+    param('id').isMongoId(),
+    body('progress').isInt({ min: 0, max: 100 })
+  ]),
+  restrictTo('manager', 'employee'),
+  GoalController.updateGoalProgress
+);
+
+router.delete(
+  '/:id',
+  validate([param('id').isMongoId()]),
+  restrictTo('manager'),
+  GoalController.deleteGoal
+);
+
+export default router;

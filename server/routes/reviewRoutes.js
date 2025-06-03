@@ -1,72 +1,56 @@
-const express = require('express');
-const { body } = require('express-validator');
-const {
-  authenticate,
-  authorize,
-  injectModel,
-  checkOwnership
-} = require('../middleware/auth');
-const validateRequest = require('../middleware/validation');
-const reviewController = require('../controllers/reviewController');
-const Review = require('../models/Review');
+import express from 'express';
+import ReviewController from '../controllers/reviewController.js';
+import { authenticate, restrictTo } from '../middleware/auth.js';
+import validate from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(authenticate);
+router.use(authenticate); // All routes require authentication
 
-// Reusable validation chains
-const reviewValidation = [
-  body('employeeId').notEmpty().isMongoId().withMessage('Valid employee ID required'),
-  body('reviewerId').notEmpty().isMongoId().withMessage('Valid reviewer ID required'),
-  body('rating').isFloat({ min: 1, max: 5 }).withMessage('Rating must be 1-5'),
-  body('comments').optional().isString().trim(),
-  body('status').optional().isIn(['draft', 'published'])
-];
-
-const feedbackValidation = [
-  body('feedback').notEmpty().trim().withMessage('Feedback text required'),
-  body('anonymous').optional().isBoolean()
-];
-
-// Route definitions
-router.route('/')
-  .get(authorize('admin', 'manager', 'hr'), reviewController.getAllReviews)
-  .post(
-    authorize('admin', 'manager'),
-    reviewValidation,
-    validateRequest,
-    reviewController.createReview
-  );
-
-router.route('/:id')
-  .get(
-    injectModel(Review),
-    checkOwnership('participant'),  // Check if user is employee or reviewer
-    reviewController.getReviewById
-  )
-  .put(
-    injectModel(Review),
-    authorize('admin', 'manager'),
-    checkOwnership('reviewer'),  // Only reviewer can update before submission
-    reviewValidation,
-    validateRequest,
-    reviewController.updateReview
-  )
-  .delete(
-    authorize('admin'),
-    injectModel(Review),
-    reviewController.deleteReview
-  );
-
-// Feedback submission route
 router.post(
-  '/:id/feedback',
-  injectModel(Review),
-  checkOwnership('reviewer'),  // Only reviewer can submit feedback
-  feedbackValidation,
-  validateRequest,
-  reviewController.submitFeedback
+  '/',
+  restrictTo('manager'),
+  validate([
+    body('employee').isMongoId(),
+    body('performanceRating').isInt({ min: 1, max: 5 }),
+    body('reviewPeriod.startDate').isISO8601(),
+    body('reviewPeriod.endDate').isISO8601(),
+    body('strengths').optional().isArray(),
+    body('areasForImprovement').optional().isArray()
+  ]),
+  ReviewController.createReview
 );
 
-module.exports = router;
+router.get(
+  '/employee/:employeeId',
+  validate([param('employeeId').isMongoId()]),
+  restrictTo('admin', 'manager', 'employee'),
+  ReviewController.getEmployeeReviews
+);
+
+router.get(
+  '/:id',
+  validate([param('id').isMongoId()]),
+  restrictTo('admin', 'manager', 'employee'),
+  ReviewController.getReview
+);
+
+router.patch(
+  '/:id',
+  validate([
+    param('id').isMongoId(),
+    body('performanceRating').optional().isInt({ min: 1, max: 5 }),
+    body('feedback').optional().trim()
+  ]),
+  restrictTo('manager'),
+  ReviewController.updateReview
+);
+
+router.post(
+  '/:id/finalize',
+  validate([param('id').isMongoId()]),
+  restrictTo('manager'),
+  ReviewController.finalizeReview
+);
+
+export default router;

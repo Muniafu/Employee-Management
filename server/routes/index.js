@@ -1,30 +1,19 @@
-const express = require('express');
-const authRoutes = require('./authRoutes');
-const employeeRoutes = require('./employeeRoutes');
-const goalsRoutes = require('./goalsRoutes');
-const reviewRoutes = require('./reviewRoutes');
-const { notFoundHandler } = require('../middleware/errorHandler');
+import express from 'express';
+import authRoutes from './authRoutes.js';
+import employeeRoutes from './employeeRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
+import goalRoutes from './goalRoutes.js';
+import { notFound } from '../middleware/errorHandler.js';
 
 const router = express.Router();
 
-// API versioning
-router.use('/api/v1/auth', authRoutes);
-router.use('/api/v1/employees', employeeRoutes);
-router.use('/api/v1/goals', goalsRoutes);
-router.use('/api/v1/reviews', reviewRoutes);
+// API routes
+router.use('/api/auth', authRoutes);
+router.use('/api/employees', employeeRoutes);
+router.use('/api/reviews', reviewRoutes);
+router.use('/api/goals', goalRoutes);
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'Server is operational',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
+// 404 handler for API routes
+router.use('/api', notFound);
 
-// Fallback for undefined routes
-router.all('*', notFoundHandler);
-
-module.exports = router;
+export default router;

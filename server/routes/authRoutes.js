@@ -1,52 +1,53 @@
-const express = require('express');
-const { body } = require('express-validator');
-const authController = require('../controllers/authController');
-const validateRequest = require('../middleware/validation');
+import express from 'express';
+import AuthController from '../controllers/authController.js';
+import validate from '../middleware/validation.js';
+import { authenticate, restrictTo } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Reusable validation chains
-const emailValidation = body('email')
-  .isEmail().withMessage('Valid email is required')
-  .normalizeEmail();
-
-const passwordValidation = body('password')
-  .isLength({ min: 6 }).withMessage('Password must be at least 6 characters');
-
-const nameValidation = body('name')
-  .notEmpty().withMessage('Name is required')
-  .trim();
-
-// Auth routes
 router.post(
   '/register',
-  [nameValidation, emailValidation, passwordValidation],
-  validateRequest,
-  authController.register
+  validate([
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 8 }),
+    body('role').optional().isIn(['admin', 'manager', 'employee'])
+  ]),
+  AuthController.register
 );
 
 router.post(
   '/login',
-  [emailValidation, body('password').exists().withMessage('Password is required')],
-  validateRequest,
-  authController.login
+  validate([
+    body('email').isEmail().normalizeEmail(),
+    body('password').exists()
+  ]),
+  AuthController.login
 );
-
-router.post('/logout', authController.logout);
-router.post('/refresh-token', authController.refreshToken);
 
 router.post(
   '/forgot-password',
-  [emailValidation],
-  validateRequest,
-  authController.forgotPassword
+  validate([body('email').isEmail().normalizeEmail()]),
+  AuthController.forgotPassword
 );
 
-router.patch(
-  '/reset-password/:token',
-  [passwordValidation],
-  validateRequest,
-  authController.resetPassword
+router.post(
+  '/reset-password',
+  validate([
+    body('token').exists(),
+    body('newPassword').isLength({ min: 8 })
+  ]),
+  AuthController.resetPassword
 );
 
-module.exports = router;
+router.use(authenticate); // All routes below require authentication
+
+router.post(
+  '/change-password',
+  validate([
+    body('currentPassword').exists(),
+    body('newPassword').isLength({ min: 8 })
+  ]),
+  AuthController.changePassword
+);
+
+export default router;
