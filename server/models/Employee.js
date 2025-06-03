@@ -1,172 +1,112 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import validator from 'validator';
 
 const employeeSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'User reference is required'],
-      index: true,
-      unique: true
+      required: true,
+      unique: true,
     },
     firstName: {
       type: String,
       required: [true, 'First name is required'],
       trim: true,
-      minlength: [2, 'First name must be at least 2 characters']
+      maxlength: [50, 'First name cannot exceed 50 characters'],
     },
     lastName: {
       type: String,
       required: [true, 'Last name is required'],
       trim: true,
-      minlength: [2, 'Last name must be at least 2 characters']
+      maxlength: [50, 'Last name cannot exceed 50 characters'],
     },
-    position: {
-      type: String,
-      required: [true, 'Position is required'],
-      trim: true
+    dateOfBirth: {
+      type: Date,
+      validate: {
+        validator: function (dob) {
+          return dob < new Date();
+        },
+        message: 'Date of birth must be in the past',
+      },
     },
     department: {
       type: String,
-      required: [true, 'Department is required'],
-      enum: {
-        values: ['Engineering', 'HR', 'Marketing', 'Sales', 'Operations', 'Finance', 'Support'],
-        message: 'Invalid department value'
-      }
+      required: true,
+      enum: [
+        'Engineering',
+        'HR',
+        'Marketing',
+        'Sales',
+        'Finance',
+        'Operations',
+      ],
+    },
+    position: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: [100, 'Position cannot exceed 100 characters'],
     },
     hireDate: {
       type: Date,
-      required: [true, 'Hire date is required'],
-      default: Date.now
+      required: true,
+      default: Date.now,
     },
-    manager: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
-      index: true
-    },
-    directReports: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee'
-    }],
     skills: {
       type: [String],
       validate: {
-        validator: skills => skills.length <= 20,
-        message: 'Cannot have more than 20 skills'
-      }
+        validator: function (skills) {
+          return skills.length <= 10;
+        },
+        message: 'Cannot have more than 10 skills',
+      },
+    },
+    contactNumber: {
+      type: String,
+      validate: {
+        validator: function (v) {
+          return validator.isMobilePhone(v, 'any', { strictMode: false });
+        },
+        message: 'Please provide a valid phone number',
+      },
+    },
+    emergencyContact: {
+      name: String,
+      relationship: String,
+      phone: String,
     },
     status: {
       type: String,
-      enum: ['active', 'on-leave', 'terminated', 'probation'],
-      default: 'active'
+      enum: ['active', 'on-leave', 'terminated', 'retired'],
+      default: 'active',
     },
-    contact: {
-      phone: {
-        type: String,
-        trim: true,
-        match: [/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, 'Invalid phone number format']
-      },
-      secondaryEmail: {
-        type: String,
-        trim: true,
-        lowercase: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email format']
-      }
-    },
-    profileImage: {
-      type: String,
-      default: 'default-avatar.jpg'
-    },
-    performanceScore: {
-      type: Number,
-      min: [0, 'Performance score cannot be negative'],
-      max: [5, 'Performance score cannot exceed 5'],
-      default: 3
-    }
   },
   {
     timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform: function(doc, ret) {
-        delete ret.__v;
-        delete ret.directReports;
-        return ret;
-      }
-    },
-    toObject: { virtuals: true }
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// 🪪 Virtual for full name
-employeeSchema.virtual('fullName').get(function() {
+// Virtual for full name
+employeeSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// 📅 Virtual for tenure (in years)
-employeeSchema.virtual('tenureYears').get(function() {
-  const msPerYear = 1000 * 60 * 60 * 24 * 365;
-  return ((Date.now() - this.hireDate) / msPerYear).toFixed(1);
-});
+// Indexes for performance
+employeeSchema.index({ department: 1 });
+employeeSchema.index({ position: 1 });
+employeeSchema.index({ status: 1 });
+employeeSchema.index({ user: 1 }, { unique: true });
 
-// 🔍 Text search index
-employeeSchema.index({
-  firstName: 'text',
-  lastName: 'text',
-  position: 'text',
-  department: 'text'
-});
-
-// 📊 Performance index
-employeeSchema.index({ performanceScore: 1 });
-
-// 🗑️ Cascade delete middleware
-employeeSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
-  try {
-    // Remove user reference
-    await mongoose.model('User').deleteOne({ _id: this.user });
-    
-    // Remove from manager's direct reports
-    await mongoose.model('Employee').updateMany(
-      { manager: this._id },
-      { $unset: { manager: 1 } }
-    );
-    
-    // Remove from direct reports
-    await mongoose.model('Employee').updateMany(
-      { _id: { $in: this.directReports } },
-      { $unset: { manager: 1 } }
-    );
-    
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 🔄 Update directReports when manager changes
-employeeSchema.pre('save', async function(next) {
-  if (this.isModified('manager')) {
-    const previousManager = this.constructor.hydrate(this._original).manager;
-    
-    // Remove from previous manager's directReports
-    if (previousManager) {
-      await mongoose.model('Employee').updateOne(
-        { _id: previousManager },
-        { $pull: { directReports: this._id } }
-      );
-    }
-    
-    // Add to new manager's directReports
-    if (this.manager) {
-      await mongoose.model('Employee').updateOne(
-        { _id: this.manager },
-        { $addToSet: { directReports: this._id } }
-      );
-    }
-  }
+// Cascade delete reviews and goals when employee is deleted
+employeeSchema.pre('remove', async function (next) {
+  await this.model('Review').deleteMany({ employee: this._id });
+  await this.model('Goal').deleteMany({ employee: this._id });
   next();
 });
 
 const Employee = mongoose.model('Employee', employeeSchema);
-module.exports = Employee;
+
+export default Employee;

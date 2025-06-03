@@ -1,84 +1,78 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import validator from 'validator';
+import { roles } from '../utils/constants.js';
 
 const userSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: true,
       unique: true,
       trim: true,
       lowercase: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email format'],
-      index: true
+      validate: [validator.isEmail, 'Please provide a valid email'],
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters'],
-      select: false
+      required: true,
+      minlength: 8,
+      select: false,
     },
     role: {
       type: String,
-      enum: ['admin', 'employee'],
-      default: 'employee',
-      index: true
+      enum: Object.values(roles),
+      default: roles.EMPLOYEE,
     },
-    employee: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
-      index: true
-    },
-    lastLogin: Date,
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
     isActive: {
       type: Boolean,
       default: true,
-      select: false
-    }
+    },
+    lastLogin: {
+      type: Date,
+    },
+    passwordChangedAt: {
+      type: Date,
+    },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
-    toJSON: {
-      virtuals: true,
-      transform: function(doc, ret) {
-        delete ret.password;
-        delete ret.__v;
-        return ret;
-      }
-    },
-    toObject: { virtuals: true }
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// 🔒 Password encryption middleware
-userSchema.pre('save', async function(next) {
+// Indexes for performance
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+
+// Document middleware to hash password before saving
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
-  // Hash password with cost factor of 12
+
   this.password = await bcrypt.hash(this.password, 12);
-  
-  // Set passwordChangedAt for existing documents
   if (!this.isNew) this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
-// 🔐 Query middleware to filter out inactive users
-userSchema.pre(/^find/, function(next) {
-  this.find({ isActive: { $ne: false } });
-  next();
-});
-
-// 🔑 Password comparison method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+// Instance method to check password
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-// ⏱️ Check if password was changed after token was issued
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+// Instance method to check if password changed after token was issued
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -89,24 +83,6 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   return false;
 };
 
-// 🔄 Create password reset token
-userSchema.methods.createPasswordResetToken = function() {
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-  
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
-  return resetToken;
-};
-
-// 🚀 Instance method for user status
-userSchema.methods.isActiveUser = function() {
-  return this.isActive;
-};
-
 const User = mongoose.model('User', userSchema);
-module.exports = User;
+
+export default User;
