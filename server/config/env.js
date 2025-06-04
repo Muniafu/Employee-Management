@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env file
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Validate required environment variables
 const requiredEnvVars = [
@@ -21,6 +21,7 @@ const requiredEnvVars = [
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
+  console.error('Missing variables:', missingVars);
   throw new Error(
     `Missing required environment variables: ${missingVars.join(', ')}`
   );
@@ -29,7 +30,7 @@ if (missingVars.length > 0) {
 // Export configuration object
 const config = {
   env: process.env.NODE_ENV,
-  port: process.env.PORT || 5000,
+  port: process.env.PORT || 3000,
   mongoose: {
     url: process.env.MONGODB_URI + (process.env.NODE_ENV === 'test' ? '-test' : ''),
     options: {
@@ -42,9 +43,22 @@ const config = {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '30d',
   },
+    email: {
+    from: process.env.EMAIL_FROM,
+    smtpHost: process.env.SMTP_HOST,
+    smtpPort: process.env.SMTP_PORT,
+    smtpUser: process.env.SMTP_USERNAME,
+    smtpPassword: process.env.SMTP_PASSWORD,
+    smtpSecure: process.env.SMTP_SECURE === 'true',
+  },
   logs: {
-    level: process.env.LOG_LEVEL || 'silly',
-    morgan: process.env.MORGAN || 'dev',
+    level: process.env.LOG_LEVEL || 'debug',
+    morgan: process.env.MORGAN_FORMAT || 'dev'
+  },
+
+  rateLimit: {
+    windowMs: process.env.RATE_LIMIT_WINDOW_MS ? parseInt(process.env.RATE_LIMIT_WINDOW_MS) : 15 * 60 * 1000,
+    max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 100
   },
   isProduction: process.env.NODE_ENV === 'production',
   isTest: process.env.NODE_ENV === 'test',
