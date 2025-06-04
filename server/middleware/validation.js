@@ -5,7 +5,7 @@ import APIError from '../utils/APIError.js';
  * Validate request using express-validator
  * @param {Array} validations - Array of validation rules
  */
-const validate = (validations) => {
+const createValidator = (validations) => {
   return async (req, res, next) => {
     await Promise.all(validations.map((validation) => validation.run(req)));
 
@@ -80,25 +80,25 @@ const goalRules = [
 /**
  * Validate object ID in params
  */
-const validateIdParam = validate(idParamRules);
+const validateIdParam = createValidator(idParamRules);
 
 /**
  * Validate employee data
  */
-const validateEmployee = validate(employeeRules);
+const validateEmployee = createValidator(employeeRules);
 
 /**
  * Validate review data
  */
-const validateReview = validate(reviewRules);
+const validateReview = createValidator(reviewRules);
 
 /**
  * Validate goal data
  */
-const validateGoal = validate(goalRules);
+const validateGoal = createValidator(goalRules);
 
-export {
-  validate,
+export default{
+  validate: createValidator,
   validateIdParam,
   validateEmployee,
   validateReview,
