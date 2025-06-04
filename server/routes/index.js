@@ -2,7 +2,7 @@ import express from 'express';
 import authRoutes from './authRoutes.js';
 import employeeRoutes from './employeeRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
-import goalRoutes from './goalRoutes.js';
+import goalRoutes from './goalsRoutes.js';
 import { notFound } from '../middleware/errorHandler.js';
 
 const router = express.Router();

@@ -1,13 +1,14 @@
 import express from 'express';
 import AuthController from '../controllers/authController.js';
-import validate from '../middleware/validation.js';
+import validation from '../middleware/validation.js';
 import { authenticate, restrictTo } from '../middleware/auth.js';
+import { body } from 'express-validator';
 
 const router = express.Router();
 
 router.post(
   '/register',
-  validate([
+  validation.validate([
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 8 }),
     body('role').optional().isIn(['admin', 'manager', 'employee'])
@@ -17,7 +18,7 @@ router.post(
 
 router.post(
   '/login',
-  validate([
+  validation.validate([
     body('email').isEmail().normalizeEmail(),
     body('password').exists()
   ]),
@@ -26,13 +27,13 @@ router.post(
 
 router.post(
   '/forgot-password',
-  validate([body('email').isEmail().normalizeEmail()]),
+  validation.validate([body('email').isEmail().normalizeEmail()]),
   AuthController.forgotPassword
 );
 
 router.post(
   '/reset-password',
-  validate([
+  validation.validate([
     body('token').exists(),
     body('newPassword').isLength({ min: 8 })
   ]),
@@ -43,7 +44,7 @@ router.use(authenticate); // All routes below require authentication
 
 router.post(
   '/change-password',
-  validate([
+  validation.validate([
     body('currentPassword').exists(),
     body('newPassword').isLength({ min: 8 })
   ]),

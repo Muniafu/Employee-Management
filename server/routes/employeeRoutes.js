@@ -1,7 +1,8 @@
 import express from 'express';
 import EmployeeController from '../controllers/employeeController.js';
 import { authenticate, restrictTo } from '../middleware/auth.js';
-import validate from '../middleware/validation.js';
+import validation from '../middleware/validation.js';
+import { body, param } from 'express-validator';
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.use(authenticate); // All routes require authentication
 router.post(
   '/',
   restrictTo('admin', 'manager'),
-  validate([
+  validation.validate([
     body('firstName').trim().notEmpty(),
     body('lastName').trim().notEmpty(),
     body('department').isIn(['Engineering', 'HR', 'Marketing', 'Sales', 'Finance', 'Operations']),
@@ -28,21 +29,21 @@ router.get(
 
 router.get(
   '/:id',
-  validate([param('id').isMongoId()]),
+  validation.validate([param('id').isMongoId()]),
   restrictTo('admin', 'manager', 'employee'),
   EmployeeController.getEmployee
 );
 
 router.get(
   '/:id/stats',
-  validate([param('id').isMongoId()]),
+  validation.validate([param('id').isMongoId()]),
   restrictTo('admin', 'manager'),
   EmployeeController.getEmployeeStats
 );
 
 router.patch(
   '/:id',
-  validate([
+  validation.validate([
     param('id').isMongoId(),
     body('firstName').optional().trim().notEmpty(),
     body('lastName').optional().trim().notEmpty(),
