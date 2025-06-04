@@ -1,45 +1,12 @@
-import nodemailer from 'nodemailer';
 import config from '../config/env.js';
 import logger from '../utils/logger.js';
 import User from '../models/User.js';
 import Employee from '../models/Employee.js';
 
-// Create reusable transporter object
-const transporter = nodemailer.createTransport({
-  host: config.email.smtpHost,
-  port: config.email.smtpPort,
-  secure: config.email.smtpSecure,
-  auth: {
-    user: config.email.smtpUser,
-    pass: config.email.smtpPassword,
-  },
-});
-
 /**
  * Service for sending notifications
  */
 class NotificationService {
-  /**
-   * Send email notification
-   * @param {Object} options - Email options
-   * @returns {Promise<void>}
-   */
-  static async sendEmail(options) {
-    try {
-      await transporter.sendMail({
-        from: `"Performance System" <${config.email.from}>`,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-      });
-      logger.info(`Email sent to ${options.to}`);
-    } catch (error) {
-      logger.error(`Error sending email: ${error.message}`);
-      throw new APIError(500, 'Failed to send email');
-    }
-  }
-
   /**
    * Notify employee about new review
    * @param {string} reviewId - Review ID
