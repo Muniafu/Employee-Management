@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { protect, restrictTo } = require('../middlewares/authMiddleware');
-const { requireAdmin } = require('../middlewares/adminMiddleware');
+const { protect, restrictTo } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/adminMiddleware');
 
 // Protect all routes after this middleware
 router.use(protect);
