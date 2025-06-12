@@ -1,28 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const {
+  register,
+  login,
+  approveUser,
+  rejectUser,
+} = require('../controllers/authController');
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-// Public routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.get('/logout', authController.logout);
-router.post('/forgotPassword', authController.forgotPassword);
-router.patch('/resetPassword/:token', authController.resetPassword);
-
-// Protected routes (require authentication)
-router.use(protect);
-
-router.get('/me', (req, res) => {
-  // Simply return the user data from the request object
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user: req.user
-    }
-  });
-});
-
-router.patch('/updateMyPassword', authController.updatePassword);
+router.post('/register', register);
+router.post('/login', login);
+router.put('/approve/:id', protect, adminOnly, approveUser);
+router.put('/reject/:id', protect, adminOnly, rejectUser);
 
 module.exports = router;
