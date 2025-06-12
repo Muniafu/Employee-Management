@@ -1,5 +1,8 @@
 import { usePerformance } from '../context/PerformanceContext';
-import { useEffect, useState } from 'react';
+import MetricList from '../components/MetricList';
+import GoalList from '../components/GoalList';
+import FeedbackList from '../components/FeedbackList';
+import { useState } from 'react';
 
 const Dashboard = () => {
   const {
@@ -40,6 +43,7 @@ const Dashboard = () => {
 
       <section>
         <h3>Performance Metrics</h3>
+        <MetricList />
         <ul>
           {metrics.map(m => (
             <li key={m._id}>{m.metric_name} – {m.metric_value}
@@ -53,6 +57,7 @@ const Dashboard = () => {
 
       <section>
         <h3>Goals</h3>
+        <GoalList />
         <ul>
           {goals.map(g => (
             <li key={g._id}>{g.goal_name}
@@ -66,6 +71,7 @@ const Dashboard = () => {
 
       <section>
         <h3>Feedback</h3>
+        <FeedbackList />
         <ul>
           {feedback.map(f => (
             <li key={f._id}>{f.feedback_text}
