@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-const goalSchema = new mongoose.Schema({
-  goal_name: {
+const performanceMetricSchema = new mongoose.Schema({
+  metric_name: {
     type: String,
     required: true,
     trim: true,
   },
-  goal_description: {
-    type: String,
+  metric_value: {
+    type: Number,
     required: true,
   },
   user_id: {
@@ -17,4 +17,4 @@ const goalSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Goal', goalSchema);
+module.exports = mongoose.model('PerformanceMetric', performanceMetricSchema);

@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
-const goalSchema = new mongoose.Schema({
-  goal_name: {
+const feedbackReviewSchema = new mongoose.Schema({
+  feedback_text: {
     type: String,
     required: true,
-    trim: true,
   },
-  goal_description: {
+  review_text: {
     type: String,
     required: true,
   },
@@ -17,4 +16,4 @@ const goalSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Goal', goalSchema);
+module.exports = mongoose.model('FeedbackReview', feedbackReviewSchema);
