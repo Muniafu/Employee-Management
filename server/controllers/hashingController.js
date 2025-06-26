@@ -39,6 +39,8 @@ const decrypt = async (text) => {
 };
 
 module.exports = {
+  encrypt,
+  
   encryptData: async (data) => {
     try {
       const encrypted = await encrypt(JSON.stringify(data));

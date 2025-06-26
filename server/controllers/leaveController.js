@@ -67,8 +67,23 @@ const getPendingLeaves = async (req, res, next) => {
 
 const updateLeaveStatus = async (req, res, next) => {
   try {
+    // Validate request body exists
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is required"
+      });
+    }
+    
     const { leaveId } = req.params;
     const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Status is required"
+      });
+    }
 
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({
