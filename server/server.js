@@ -44,8 +44,9 @@ app.use(cors(corsOptions));
 // Basic Middlewares
 // ======================
 app.use(morgan('dev'));
-app.use(bodyParser.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -76,7 +77,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/api/superuser', checkAuth, superUserRoutes);
+app.use('/api/superuser', superUserRoutes);
 app.use('/api/users', checkAuth, userRoutes);
 app.use('/api/leaves', checkAuth, leaveRoutes);
 
