@@ -9,15 +9,15 @@ const {
 } = require('../controllers/leaveController');
 
 // Apply for leave (protected)
-router.post('/:userId/leaves', checkAuth, applyForLeave);
+router.post('/users/:uid/leaves', checkAuth, applyForLeave);
 
 // Get pending leaves (admin only)
 router.get('/leaves/pending', checkAuth, getPendingLeaves);
 
 // Approve/reject leave (protected)
-router.patch('/leaves/:leaveId', checkAuth, updateLeaveStatus);
+router.patch('/:leaveId', checkAuth, updateLeaveStatus);
 
 // Get user's leave history (protected)
-router.get('/:userId/leaves', checkAuth, getUserLeaves);
+router.get('/users/:uid/leaves', checkAuth, getUserLeaves);
 
 module.exports = router;

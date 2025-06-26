@@ -27,13 +27,16 @@ router.post(
 
 // Protected routes
 router.post(
-  '/register',
+  '/',
   checkAuth,
   singleUpload('image'),
   [
     check('email').isEmail().normalizeEmail(),
     check('password').isLength({ min: 8 }),
-    check('name').notEmpty()
+    check('name').notEmpty(),
+    check('position').notEmpty(),
+    check('dateOfBirth').isDate(),
+    check('phone').notEmpty()
   ],
   newUser
 );
