@@ -4,7 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CardUI from "../../UI/CardUI";
 import ChartUI from "../../UI/ChartUI";
-import getIcon from "../../utils/getIcon";
+import { getIcon } from "../../utils/getIcon";
 
 const ListGroupItem = ({ title, value }) => {
   return (

@@ -1,10 +1,10 @@
 import React, { useContext, useState } from "react";
 import dayjs from "dayjs";
-import axios from "axios";
+import axios from "../../api/axios";
 import { DatePicker, Form } from "antd";
 import { Button, Card } from "react-bootstrap";
 import { AuthContext } from "../../Context/AuthContext";
-import { calculateTotalDaysSelected, formatLeaveDate } from "../../utils/leaveFunctions";
+import { calculateTotalDaysSelected, formatLeaveDate } from "../../utils/leaveFunction";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

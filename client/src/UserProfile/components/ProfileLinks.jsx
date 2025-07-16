@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { ListGroup, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import CardUI from "../../UI/CardUI";
-import getIcon from "../../utils/getIcon";
+import { getIcon } from "../../utils/getIcon";
 
 const ListGroupItem = ({ icon, title, value }) => {
   return (
