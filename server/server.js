@@ -78,7 +78,7 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api/superuser', superUserRoutes);
-app.use('/api/users', checkAuth, userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/leaves', checkAuth, leaveRoutes);
 
 // ======================
