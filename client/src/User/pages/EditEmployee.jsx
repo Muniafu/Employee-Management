@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Form, Button, Card, Spinner, Container, Row, Col } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import axios from "../../api/axios";
 import { AuthContext } from "../../Context/AuthContext";
 import { FaSave, FaTimes, FaUpload } from "react-icons/fa";
 

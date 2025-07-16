@@ -2,14 +2,14 @@ import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button, Container, Row, Col, Spinner } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
-import axios from "axios";
+import axios from "../../api/axios";
 
 import { AuthContext } from "../../Context/AuthContext";
 import ProfileCard from "../../UserProfile/components/ProfileCard";
 import ProfileDetails from "../../UserProfile/components/ProfileDetails";
 import ProfileLinks from "../../UserProfile/components/ProfileLinks";
 import EditEmployee from "../../User/pages/EditEmployee";
-import getIcon from "../../utils/getIcon";
+import { getIcon } from "../../utils/getIcon";
 
 const Profile = () => {
   const auth = useContext(AuthContext);
