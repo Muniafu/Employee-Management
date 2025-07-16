@@ -2,20 +2,20 @@ import { useCallback, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios';
+import axios from "./api/axios";
 
 // Context
-import { AuthContext } from './Context/AuthContext';
+import { AuthProvider } from './Context/AuthProvider';
 
 // Components
-//import MainNav from './Navigation/MainNav';
+import MainNav from './Navigation/MainNav';
 import Dashboard from './Dashboard/pages/Dashboard';
 import Register from './User/pages/Register';
 import Login from './User/pages/Login';
 import EditEmployee from './User/pages/EditEmployee';
-//import Profile from './UserProfile/pages/Profile';
-//import LeavePage from './Dashboard/components/LeavePage';
-//import ApproveLeave from './Dashboard/components/ApproveLeave';
+import Profile from './UserProfile/pages/Profile';
+import LeavePage from './Dashboard/components/LeavePage';
+import ApproveLeave from './Dashboard/components/ApproveLeave';
 import AllLeaves from './Dashboard/pages/AllLeaves';
 //import NotFound from './NotFound';
 
@@ -99,10 +99,10 @@ function App() {
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthProvider value={authContextValue}>
       <Router>
         <div className="app-container">
-          {/*<MainNav />*/}
+          *<MainNav />
           
           <div className="content">
             <Routes>
@@ -110,10 +110,10 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
               <Route path="/leave-page" element={<AllLeaves />} />
-              {/*<Route path="/ask-for-leave/:uid" element={<LeavePage />} />*/}
+              <Route path="/ask-for-leave/:uid" element={<LeavePage />} />
               <Route path="/edit/:uid" element={<EditEmployee />} />
-              {/*<Route path="/profile/:uid" element={<Profile />} />*/}
-              {/*<Route path="/approve-leave" element={<ApproveLeave />} />*/}
+              <Route path="/profile/:uid" element={<Profile />} />
+              <Route path="/approve-leave" element={<ApproveLeave />} />
               {/*<Route path="*" element={<NotFound />} />*/}
             </Routes>
           </div>
@@ -131,7 +131,7 @@ function App() {
           />
         </div>
       </Router>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }
 
