@@ -86,12 +86,12 @@ const newUser = async (req, res, next) => {
     // Create new user - ensure password is hashed
     const user = new userModel({
       email,
-      password, // Let the pre-save hook handle hashing
+      password,
       name,
       position,
       dateOfBirth: new Date(dateOfBirth),
       phone,
-      isSuperUser: false, // Default to false for regular users
+      isSuperUser: req.body.isSuperUser || false,
       image: req.file?.path || 'uploads/images/user-default.jpg'
     });
 
@@ -99,7 +99,8 @@ const newUser = async (req, res, next) => {
     
     res.status(201).json({ 
       success: true, 
-      message: 'Registration successful' 
+      message: 'Registration successful',
+      userId: user._id,
     });
   } catch (error) {
     next(error);
