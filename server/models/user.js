@@ -35,7 +35,13 @@ const userSchema = new mongoose.Schema({
   },
   dateOfBirth: { 
     type: Date, 
-    required: true 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return v instanceof Date && !isNaN(v);
+      },
+      message: 'Please provide a valid date'
+    }
   },
   phone: { 
     type: String,
