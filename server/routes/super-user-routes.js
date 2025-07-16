@@ -2,7 +2,6 @@ const express = require('express');
 const { check } = require('express-validator');
 const { newUser, loginUser, createFirstAdmin } = require('../controllers/userController');
 const checkAuth = require('../middleware/check-auth');
-const { singleUpload } = require('../middleware/file-upload');
 const router = express.Router();
 
 // Public routes
@@ -34,7 +33,6 @@ router.use(checkAuth);
 
 router.post(
   '/users',
-  singleUpload('image'),
   [
     check('email').normalizeEmail().isEmail().withMessage('Valid email required'),
     check('name').notEmpty().withMessage('Name is required'),

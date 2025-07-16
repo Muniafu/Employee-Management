@@ -17,19 +17,7 @@ router.get('/:uid', getUserById);
 
 // Authentication routes
 router.post(
-  '/login',
-  [
-    check('email').isEmail().normalizeEmail(),
-    check('password').isLength({ min: 6 })
-  ],
-  loginUser
-);
-
-// Protected routes
-router.post(
-  '/',
-  checkAuth,
-  singleUpload('image'),
+  '/register',
   [
     check('email').isEmail().normalizeEmail(),
     check('password').isLength({ min: 8 }),
@@ -41,9 +29,20 @@ router.post(
   newUser
 );
 
+router.post(
+  '/login',
+  [
+    check('email').isEmail().normalizeEmail(),
+    check('password').isLength({ min: 6 })
+  ],
+  loginUser
+);
+
+// Protected routes
+router.use(checkAuth);
+
 router.patch(
   '/:uid',
-  checkAuth,
   singleUpload('image'),
   editEmployee
 );
