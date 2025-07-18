@@ -25,9 +25,9 @@ app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later'
+  windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 1 * 60 * 1000, // 15 minutes in production, 1 minute in development
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 requests in production, 1000 in development
+  message: 'Too many requests, please try again later.'
 });
 app.use(limiter);
 
@@ -35,8 +35,15 @@ app.use(limiter);
 const corsOptions = {
   origin: process.env.CLIENT_URL || "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization",
+    "X-Requested-With",
+    "Accept"
+  ],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
 
