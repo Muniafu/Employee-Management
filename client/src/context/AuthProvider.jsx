@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import axios from "../api/axios";
 import { AuthContext } from './AuthContext';
 
@@ -40,8 +40,22 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const getUserData = useCallback(async () => {
+    if (auth.token && auth.userId) {
+      try {
+        const response = await axios.get(`/api/users/${auth.userId}`);
+        setAuth((prev) => ({
+          ...prev,
+          currentUser: response.data.user
+        }));
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    }
+  }, [auth.token, auth.userId]);
+
   return (
-    <AuthContext.Provider value={{ ...auth, login, logout }}>
+    <AuthContext.Provider value={{ ...auth, login, logout, getUserData }}>
       {children}
     </AuthContext.Provider>
   );

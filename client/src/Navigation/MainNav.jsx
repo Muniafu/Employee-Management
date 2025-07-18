@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {AuthContext } from "../Context/AuthContext";
+import { AuthContext } from "../Context/AuthContext";
 
 import { 
   NavDropdown,
@@ -12,23 +12,17 @@ import {
 } from "react-bootstrap";
 
 import MainHeader from "./MainHeader";
-import getIcon from "../utils/getIcon";
+import { getIcon } from "../utils/getIcon";
 
 const NavLinks = ({ link, navIcon, navText, badgeCount }) => {
   return (
     <Nav.Link
       as={Link}
       to={link}
-      className="d-flex align-items-center text-white mx-2 px-3 py-2 rounded-3"
-      style={{
-        transition: 'all 0.3s ease',
-        ':hover': {
-          backgroundColor: 'rgba(255,255,255,0.1)'
-        }
-      }}
+      className="d-flex align-items-center text-white mx-1 mx-lg-2 px-2 px-lg-3 py-2 rounded-3 hover-bg-primary-10"
     >
       <span className="me-2">{getIcon(navIcon)}</span>
-      {navText}
+      <span className="d-none d-lg-inline">{navText}</span>
       {badgeCount > 0 && (
         <Badge pill bg="danger" className="ms-2">
           {badgeCount}
@@ -72,21 +66,25 @@ function MainNav() {
 
   return (
     <MainHeader>
-      <Navbar expand="lg" bg="primary" variant="dark" className="shadow-sm">
-        <Container fluid>
-          <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center">
+      <Navbar expand="lg" bg="primary" variant="dark" className="shadow-sm py-2">
+        <Container fluid className="px-3 px-lg-4">
+          <Navbar.Brand 
+            as={Link} 
+            to="/" 
+            className="fw-bold d-flex align-items-center me-0 me-lg-3"
+          >
             <span className="me-2">🏢</span>
-            Employee Portal
+            <span className="d-none d-sm-inline">Employee Portal</span>
           </Navbar.Brand>
           
-          <Navbar.Toggle aria-controls="main-navbar" />
+          <Navbar.Toggle aria-controls="main-navbar" className="border-0" />
           
-          <Navbar.Collapse id="main-navbar">
-            <Nav className="me-auto">
+          <Navbar.Collapse id="main-navbar" className="justify-content-between">
+            <Nav className="d-flex align-items-center flex-grow-1">
               {authUser.isLoggedIn && (
                 <>
                   <NavLinks 
-                    link="/" 
+                    link="/dashboard" 
                     navIcon="dashboard" 
                     navText="Dashboard" 
                   />
@@ -94,7 +92,7 @@ function MainNav() {
                     link="/leave-page"
                     navIcon="leave"
                     navText="Leaves"
-                    badgeCount={3} // Example badge count
+                    badgeCount={3}
                   />
                   <NavLinks
                     link={`/profile/${authUser.userId}`}
@@ -106,29 +104,40 @@ function MainNav() {
             </Nav>
             
             {authUser.isLoggedIn && (
-              <Nav>
+              <Nav className="d-flex align-items-center ms-auto ms-lg-0">
                 <NavDropdown
                   title={
-                    <div className="d-flex align-items-center">
+                    <div className="d-flex align-items-center text-white">
                       <span className="me-2">👤</span>
-                      {authUser.currentUser?.name || 'Account'}
+                      <span className="d-none d-lg-inline">
+                        {authUser.currentUser?.name || 'Account'}
+                      </span>
                     </div>
                   }
                   align="end"
-                  className="text-white"
+                  menuVariant="dark"
+                  className="px-2"
                 >
-                  <NavDropdown.Item as={Link} to={`/profile/${authUser.userId}`}>
-                    View Profile
+                  <NavDropdown.Item 
+                    as={Link} 
+                    to={`/profile/${authUser.userId}`}
+                    className="py-2"
+                  >
+                    <i className="bi bi-person me-2"></i>View Profile
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/settings">
-                    Account Settings
+                  <NavDropdown.Item 
+                    as={Link} 
+                    to="/settings"
+                    className="py-2"
+                  >
+                    <i className="bi bi-gear me-2"></i>Account Settings
                   </NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item 
                     onClick={handleLogout}
-                    className="text-danger"
+                    className="py-2 text-danger"
                   >
-                    Logout
+                    <i className="bi bi-box-arrow-right me-2"></i>Logout
                   </NavDropdown.Item>
                 </NavDropdown>
               </Nav>

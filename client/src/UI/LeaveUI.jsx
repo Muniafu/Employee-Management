@@ -5,8 +5,18 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const LeaveUI = ({ employee, superuser }) => {
-  const leaveUsers = userOnLeave(employee);
+const LeaveUI = ({ employee = [], superuser }) => {
+  let leaveUsers = [];
+  
+  try {
+    leaveUsers = userOnLeave(employee);
+  } catch (error) {
+    console.error("Error in LeaveUI:", error);
+    toast.error("Error loading leave data", {
+      position: "top-right",
+      autoClose: 3000
+    });
+  }
 
   const handleLeaveClick = () => {
     toast.info("Redirecting to leave approval page", {
@@ -35,7 +45,7 @@ const LeaveUI = ({ employee, superuser }) => {
           <div className="text-muted text-center py-2">No employees found</div>
         ) : (
           employee.map((emp) => {
-            const leaveDays = getLeaveData(emp.leaveDate);
+            const leaveDays = getLeaveData(emp.leaveDates || []);
             if (leaveDays > 0) {
               return (
                 <div 

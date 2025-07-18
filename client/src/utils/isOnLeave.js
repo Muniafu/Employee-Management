@@ -1,7 +1,8 @@
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export const isOnLeave = (leaveDates, checkDate = new Date()) => {
+// First define the isOnLeave function
+const isOnLeave = (leaveDates, checkDate = new Date()) => {
   try {
     if (!Array.isArray(leaveDates)) {
       toast.error('Invalid leave data format', {
@@ -47,7 +48,8 @@ export const isOnLeave = (leaveDates, checkDate = new Date()) => {
   }
 };
 
-export const userOnLeave = (employees) => {
+// Then define userOnLeave which uses isOnLeave
+const userOnLeave = (employees) => {
   try {
     if (!Array.isArray(employees)) {
       toast.error('Invalid employee data', {
@@ -75,11 +77,6 @@ export const userOnLeave = (employees) => {
           endDate: endDate.toISOString().split('T')[0],
           days: Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
         });
-
-        toast.info(`${emp.name} is on leave until ${endDate.toLocaleDateString()}`, {
-          position: 'top-right',
-          autoClose: 5000
-        });
       }
     });
 
@@ -95,7 +92,7 @@ export const userOnLeave = (employees) => {
 };
 
 // Format date helper function
-export const formatLeaveDate = (dateString) => {
+const formatLeaveDate = (dateString) => {
   try {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -104,3 +101,6 @@ export const formatLeaveDate = (dateString) => {
     return dateString;
   }
 };
+
+// Export all functions at the end
+export { isOnLeave, userOnLeave, formatLeaveDate };
