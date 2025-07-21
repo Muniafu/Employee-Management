@@ -1,15 +1,16 @@
 const express = require('express');
 const { check } = require('express-validator');
-const { newUser, loginUser, createFirstAdmin } = require('../controllers/userController');
-const checkAuth = require('../middleware/check-auth');
+const { newUser, loginUser, createFirstAdmin, getEmployees, deleteEmployee } = require('../controllers/userController');
+const { checkAuth,checkRole } = require('../middleware/check-auth');
+
 const router = express.Router();
 
 // Public routes
 router.post(
   '/login',
   [
-    check('email').normalizeEmail().isEmail().withMessage('Valid email required'),
-    check('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    check('email').normalizeEmail().isEmail(),
+    check('password').isLength({ min: 6 })
   ],
   loginUser
 );
@@ -18,30 +19,37 @@ router.post(
 router.post(
   '/first-admin',
   [
-    check('email').normalizeEmail().isEmail().withMessage('Valid email required'),
-    check('name').notEmpty().withMessage('Name is required'),
-    check('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-    check('position').notEmpty().withMessage('Position is required'),
-    check('dateOfBirth').isDate().withMessage('Valid date of birth required'),
-    check('phone').notEmpty().withMessage('Phone number is required')
+    check('email').normalizeEmail().isEmail(),
+    check('name').notEmpty(),
+    check('password').isLength({ min: 8 }),
+    check('position').notEmpty(),
+    check('dateOfBirth').isDate(),
+    check('phone').notEmpty()
   ],
   createFirstAdmin
 );
 
 // Protected routes (require authentication)
 router.use(checkAuth);
+router.use(checkRole('admin'));
 
 router.post(
   '/users',
   [
-    check('email').normalizeEmail().isEmail().withMessage('Valid email required'),
-    check('name').notEmpty().withMessage('Name is required'),
-    check('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-    check('position').notEmpty().withMessage('Position is required'),
-    check('dateOfBirth').isDate().withMessage('Valid date of birth required'),
-    check('phone').notEmpty().withMessage('Phone number is required')
+    check('email').normalizeEmail().isEmail(),
+    check('name').notEmpty(),
+    check('password').isLength({ min: 8 }),
+    check('position').notEmpty(),
+    check('dateOfBirth').isDate(),
+    check('phone').notEmpty()
   ],
   newUser
 );
+
+// Get all users (admin only)
+router.get('/users', checkAuth, getEmployees);
+
+// Delete user (admin only)
+router.delete('/users/:id', checkAuth, deleteEmployee);
 
 module.exports = router;

@@ -38,13 +38,18 @@ router.post(
   loginUser
 );
 
-// Protected routes
-router.use(checkAuth);
-
 router.patch(
   '/:uid',
+  checkAuth,
   singleUpload('image'),
   editEmployee
+);
+
+router.post(
+  '/upload-avatar',
+  checkAuth,
+  singleUpload('avatar'),
+  uploadAvatarController
 );
 
 module.exports = router;
