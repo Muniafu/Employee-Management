@@ -1,180 +1,195 @@
-import React, { useContext } from "react";
-import { useForm } from "react-hook-form";
-import { Form, Button, Container, Row, Col } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import axios from "../../api/axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { AuthContext } from "../../Context/AuthContext";
+// User/Pages/Login.jsx
+import React, { useState } from 'react';
+import { 
+  Container, 
+  Card, 
+  Form, 
+  Button, 
+  Spinner,
+  Alert,
+  Row,
+  Col,
+  Image
+} from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import companyLogo from '../../assets/logo.png';
+import useAuth from '../../Context/useAuth';
+import { API } from '../../api/axios';
 
-const FormGroup = ({ register, errors, type, placeholder, label, id, required, pattern, message }) => {
-  const getAutoComplete = () => {
-    if (type === "password") {
-      return id === "password" ? "current-password" : "new-password";
-    }
-    return "off";
-  };
-  return (
-    <Form.Group className="mb-4" controlId={id}>
-      <Form.Label className="fw-bold text-primary">{label}</Form.Label>
-      <Form.Control
-        type={type}
-        placeholder={placeholder}
-        className="py-2 px-3 border-2"
-        autoComplete={getAutoComplete()}
-        {...register(id, {
-          required: {
-            value: required,
-            message: "This field is required",
-          },
-          pattern: pattern && {
-            value: pattern,
-            message: message,
-          },
-        })}
-      />
-      {errors[id] && (
-        <Form.Text className="text-danger mt-1 d-block">
-          {errors[id].message}
-        </Form.Text>
-      )}
-    </Form.Group>
-  );
-};
+// Zod schema for form validation
+const loginSchema = z.object({
+  email: z.string()
+    .min(1, { message: "Email is required" })
+    .email({ message: "Invalid email address" }),
+  password: z.string()
+    .min(6, { message: "Password must be at least 6 characters" })
+    .max(32, { message: "Password must be less than 32 characters" })
+});
 
-const Login = () => {
-  const { login } = useContext(AuthContext);
+export default function Login() {
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm();
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(loginSchema)
+  });
 
   const onSubmit = async (data) => {
-    try {
-      // Try logging in as superuser first
-      let response = await axios.post("/api/superuser/login", {
+    try {        
+      setLoading(true);
+      await login(data);
+      const response = await API.auth.login({
         email: data.email,
-        password: data.password,
+        password: data.password
       });
 
-      // If superuser login succeeds
-      if (response.data.success) {
-        login(
-          response.data.token,
-          response.data.userId,
-          response.data.userName,
-          true // isSuperUser
-        );
-        toast.success("Admin login successful!");
-        navigate("/dashboard");
-        return;
-      }
-    } catch (superUserError) {
-      // If superuser login fails, try regular user login
-      try {
-        const userResponse = await axios.post("/api/users/login", {
-          email: data.email,
-          password: data.password,
-        });
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
-        if (userResponse.data.success) {
-          login(
-            userResponse.data.token,
-            userResponse.data.userId,
-            userResponse.data.userName,
-            false // isSuperUser
-          );
-          toast.success("Login successful!");
-          navigate("/dashboard");
-          return;
-        }
-      } catch (userError) {
-        // Handle login failure for both types
-        const errorMessage = 
-          userError.response?.data?.message || 
-          superUserError.response?.data?.message || 
-          "Login failed. Please check your credentials.";
-        toast.error(errorMessage);
-      }
+      toast.success('Login successful!');
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Container fluid className="bg-gradient-primary-to-secondary min-vh-100 py-5">
-      <ToastContainer position="top-right" autoClose={3000} />
-      
-      <Row className="justify-content-center align-items-center">
-        <Col xs={12} md={8} lg={6} xl={5}>
-          <div className="bg-white rounded-4 shadow-lg p-4 p-md-5 my-5">
-            <h2 className="text-center text-primary fw-bold mb-4">Login</h2>
-            
+    <Container className="d-flex flex-column justify-content-center align-items-center min-vh-100 py-4">
+      <div className="w-100" style={{ maxWidth: '400px' }}>
+        {/* Logo/Header */}
+        <div className="text-center mb-4">
+          <Image 
+            src={companyLogo} 
+            alt="Company Logo" 
+            height="80"
+            className="mb-3"
+          />
+          <h2 className="mb-1">Employee Portal</h2>
+          <p className="text-muted">Sign in to access your account</p>
+        </div>
+
+        {/* Login Card */}
+        <Card className="shadow-sm">
+          <Card.Body>
+            {error && (
+              <Alert variant="danger" className="text-center">
+                {error}
+              </Alert>
+            )}
+
             <Form onSubmit={handleSubmit(onSubmit)}>
-              <FormGroup
-                register={register}
-                errors={errors}
-                type="email"
-                placeholder="user@company.com"
-                label="Email Address"
-                id="email"
-                required={true}
-                pattern={/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/}
-                message="Please enter valid email"
-              />
-              
-              <FormGroup
-                register={register}
-                errors={errors}
-                type="password"
-                placeholder="Enter password"
-                label="Password"
-                id="password"
-                required={true}
-                pattern={/^([a-zA-Z0-9@*#$%^&*!]{6,})$/}
-                message="Password must be at least 6 characters"
-              />
-              
+              {/* Email Field */}
+              <Form.Group className="mb-3">
+                <Form.Label>Email Address</Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter your email"
+                  isInvalid={!!errors.email}
+                  {...register('email')}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.email?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              {/* Password Field */}
+              <Form.Group className="mb-3">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Enter your password"
+                  isInvalid={!!errors.password}
+                  {...register('password')}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.password?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              {/* Remember Me & Forgot Password */}
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <Form.Check 
                   type="checkbox" 
                   label="Remember me" 
-                  className="text-muted"
                 />
-                <Link 
-                  to="/forgot-password" 
-                  className="text-decoration-none text-primary"
-                >
+                <Link to="/forgot-password" className="text-decoration-none">
                   Forgot password?
                 </Link>
               </div>
-              
+
+              {/* Submit Button */}
               <Button 
                 variant="primary" 
                 type="submit" 
-                className="w-100 py-2 fw-bold rounded-pill shadow-sm"
+                className="w-100 mb-3"
+                disabled={loading}
               >
-                Login
+                {loading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    Signing In...
+                  </>
+                ) : 'Sign In'}
               </Button>
-              
-              <div className="text-center mt-4">
-                <p className="text-muted mb-2">
-                  Don't have an account?{" "}
-                  <Link 
-                    to="/register" 
-                    className="text-decoration-none text-primary fw-bold"
-                  >
-                    Register
-                  </Link>
-                </p>
+
+              {/* Divider */}
+              <div className="d-flex align-items-center mb-3">
+                <hr className="flex-grow-1" />
+                <span className="px-2 text-muted">or</span>
+                <hr className="flex-grow-1" />
               </div>
+
+              {/* Social Login (optional) */}
+              <Button 
+                variant="outline-primary" 
+                className="w-100 mb-2"
+                disabled
+              >
+                <i className="bi bi-google me-2"></i>
+                Sign in with Google
+              </Button>
+              <Button 
+                variant="outline-dark" 
+                className="w-100"
+                disabled
+              >
+                <i className="bi bi-microsoft me-2"></i>
+                Sign in with Microsoft
+              </Button>
             </Form>
-          </div>
-        </Col>
-      </Row>
+          </Card.Body>
+        </Card>
+
+        {/* Sign Up Link */}
+        <Card className="shadow-sm mt-3">
+          <Card.Body className="text-center">
+            New to the platform?{' '}
+            <Link to="/register" className="text-decoration-none">
+              Create an account
+            </Link>
+          </Card.Body>
+        </Card>
+      </div>
     </Container>
   );
-};
-
-export default Login;
+}
