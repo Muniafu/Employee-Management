@@ -1,11 +1,14 @@
-import React from "react";
-import img from "../images/dashboard-img.png";
+import React, { useEffect } from "react";
+import img from "../assets/dashboard-img.png";
 import { toast } from "react-toastify";
 
 const WelcomeUI = ({ employee }) => {
-  const getGreetings = () => {
+  useEffect(() => {
+    if (!employee) return;
+
+    // Set a greeting based on the time of day
     const timeNow = new Date().getHours();
-    let greeting =
+    const greeting =
       timeNow >= 5 && timeNow < 12
         ? "Good Morning"
         : timeNow >= 12 && timeNow < 18
@@ -13,7 +16,7 @@ const WelcomeUI = ({ employee }) => {
         : "Good Evening";
 
     // Show greeting toast with different styles based on time of day
-    toast.dismiss(); // Clear any previous toasts
+    toast.dismiss();
     toast(
       <div className="text-center">
         <h5 className="mb-1">{greeting}, {employee?.name}!</h5>
@@ -33,8 +36,15 @@ const WelcomeUI = ({ employee }) => {
             : "bg-dark text-white",
       }
     );
+  }, [employee]);
 
-    return greeting;
+  const getGreetings = () => {
+    const timeNow = new Date().getHours();
+    return timeNow >= 5 && timeNow < 12
+      ? "Good Morning"
+      : timeNow >= 12 && timeNow < 18
+        ? "Good Afternoon"
+        : "Good Evening";
   };
 
   return (
