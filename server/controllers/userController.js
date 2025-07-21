@@ -4,197 +4,238 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const { encryptData, decryptData } = require('./hashingController');
 
-// User-related functions only
+// Get a single user by ID
 const getUserById = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.params.uid).select('-password');
     if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found' 
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     if (user.encryptedData) {
       const decrypted = await decryptData(user.encryptedData);
       user.sensitiveData = decrypted;
     }
-    
-    res.status(200).json({ 
-      success: true, 
-      user 
-    });
+
+    res.set('Cache-Control', 'no-store, max-age=0');
+    res.status(200).json({ success: true, user });
   } catch (error) {
     next(error);
   }
 };
 
+// Create the first super admin
 const createFirstAdmin = async (req, res, next) => {
   try {
-    // Check if any super user exists
     const adminExists = await userModel.findOne({ isSuperUser: true });
     if (adminExists) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Initial admin already exists' 
-      });
+      return res.status(403).json({ success: false, message: 'Initial admin already exists' });
     }
 
-    // Create the admin with proper password hashing
     const admin = new userModel({
       ...req.body,
       position: 'admin',
       isSuperUser: true,
-      password: req.body.password, // Let the pre-save hook handle hashing
-  });
-
-  // This will trigger the pre-save hook to hash the password
-  await admin.save();
-
-    res.status(201).json({ 
-      success: true,
-      message: 'Initial admin created successfully'
+      password: req.body.password,
     });
+
+    await admin.save();
+    res.status(201).json({ success: true, message: 'Initial admin created successfully' });
   } catch (error) {
     next(error);
   }
 };
 
+// Register a new user
 const newUser = async (req, res, next) => {
   try {
-    // Validate request body
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
         errors: errors.array()
       });
     }
 
-    const { email, password, name, position, dateOfBirth, phone } = req.body;
-
-    // Check for existing user
-    const existingUser = await userModel.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'User already exists with this email' 
-      });
-    }
-
-    // Create new user - ensure password is hashed
-    const user = new userModel({
-      email,
-      password,
-      name,
-      position,
-      dateOfBirth: new Date(dateOfBirth),
-      phone,
-      isSuperUser: req.body.isSuperUser || false,
+    const userData = {
+      ...req.body,
       image: req.file?.path || 'uploads/images/user-default.jpg'
-    });
+    };
 
+    const user = new userModel(userData);
     await user.save();
-    
-    res.status(201).json({ 
-      success: true, 
-      message: 'Registration successful',
-      userId: user._id,
+
+    res.status(201).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        position: user.position,
+        image: user.image
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
+// User login
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await userModel.findOne({ email }).select('+password');
-    
-    if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Ensure password exists and is hashed
-    if (!user.password) {
-      throw new Error('Password not properly set for the user');
-    }
-
-    // Use the comparePassword method from the model
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
-    }
-
-    // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { 
+        userId: user._id,
+        email: user.email,
+        role: user.role 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ 
-      success: true,
-      message: 'Login successful',
+    res.json({
       token,
-      userId: user._id,
-      userName: user.name,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
+// Display all users
 const displayUser = async (req, res, next) => {
   try {
     const users = await userModel.find().select('-password -encryptedData');
-    res.status(200).json({ 
-      success: true, 
-      users 
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ✅ Updated: Edit employee by ID with image upload and field updates
+const editEmployee = async (req, res, next) => {
+  try {
+    const updates = {};
+
+    if (req.file) {
+      updates.image = req.file.path;
+    }
+
+    if (req.body.name) updates.name = req.body.name;
+    if (req.body.position) updates.position = req.body.position;
+
+    const user = await userModel.findByIdAndUpdate(
+      req.params.uid,
+      updates,
+      {
+        new: true,
+        select: '-password -encryptedData'
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        position: user.position
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-const editEmployee = async (req, res, next) => {
+// ✅ New: Upload avatar for current logged-in user
+const uploadAvatar = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { password, ...updates } = req.body;
-
-    if (password) {
-      const encrypted = await encryptData({ password });
-      updates.encryptedData = encrypted.encryptedData;
-    }
-
-    updates.image = req.file?.path || 'uploads/images/user-default.jpg';
-
-    const user = await userModel.findByIdAndUpdate(id, updates, { 
-      new: true,
-      select: '-password -encryptedData'
-    });
-    
-    if (!user) {
-      return res.status(404).json({ 
+    if (!req.file) {
+      return res.status(400).json({ 
         success: false, 
-        message: 'User not found' 
+        message: 'No file uploaded' 
       });
     }
 
-    res.status(200).json({ 
-      success: true, 
-      message: 'User updated successfully',
-      user 
+    const user = await userModel.findByIdAndUpdate(
+      req.user.userId,
+      { image: `uploads/images/${req.file.filename}` },
+      { new: true, select: 'image' }
+    );
+
+    res.json({
+      success: true,
+      imageUrl: user.image
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// Stubbed but declared: getEmployees
+const getEmployees = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, role, position } = req.query;
+    
+    const query = {};
+    if (search) query.$or = [
+      { name : { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } }
+    ];
+
+    if (role) query.role = role;
+    if (position) query.position = position;
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      select: '-password -encryptedData',
+      sort: { createdAt: -1 } // Sort by creation date descending
+    };
+
+    const result = await userModel.paginate(query, options);
+
+    res.status(200).json({
+      employees: result.docs,
+      totalCount: result.totalDocs
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
+// Delete employee
+const deleteEmployee = async (req, res) => {
+  try {
+    await userModel.findByIdAndDelete(req.params.id);
+    res.status(200).json({
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
   }
 };
 
@@ -202,7 +243,10 @@ module.exports = {
   newUser,
   loginUser,
   createFirstAdmin,
+  getEmployees,
+  deleteEmployee,
   displayUser,
   editEmployee,
-  getUserById
+  getUserById,
+  uploadAvatar
 };

@@ -67,36 +67,20 @@ const getPendingLeaves = async (req, res, next) => {
 
 const updateLeaveStatus = async (req, res, next) => {
   try {
-    // Validate request body exists
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Request body is required"
-      });
-    }
-    
     const { leaveId } = req.params;
-    const { status } = req.body;
+    const { action } = req.body;
 
-    if (!status) {
-      return res.status(400).json({
-        success: false,
-        message: "Status is required"
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid action. Must be 'approve' or 'reject'" 
       });
     }
 
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status. Must be 'approved' or 'rejected'"
-      });
-    }
+    const status = action === "approve" ? "approved" : "rejected";
 
     const user = await userModel.findOneAndUpdate(
-      {
-        "leaveDates._id": leaveId,
-        "leaveDates.status": "pending" // Only update if status is pending
-      },
+      { "leaveDates._id": leaveId },
       {
         $set: {
           "leaveDates.$.status": status,
@@ -109,7 +93,7 @@ const updateLeaveStatus = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Leave not found or already processed"
+        message: "Leave not found"
       });
     }
 
@@ -127,8 +111,8 @@ const updateLeaveStatus = async (req, res, next) => {
 
 const getUserLeaves = async (req, res, next) => {
   try {
-    const { uid } = req.params;
-    const user = await userModel.findById(uid).select("leaveDates");
+    const user = await userModel.findById(req.params.uid)
+      .select("leaveDates name email");
 
     if (!user) {
       return res.status(404).json({
@@ -139,8 +123,11 @@ const getUserLeaves = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: user.leaveDates.length,
-      leaves: user.leaveDates
+      leaves: user.leaveDates.map(leave =>({
+        ...leave.toObject(),
+        userName: user.name,
+        userEmail: user.email
+      }))
     });
   } catch (error) {
     next(error);
