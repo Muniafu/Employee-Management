@@ -1,3 +1,7 @@
+Here’s a comprehensive README.md template for your Employee Management System, summarizing all the major explanations and details from your repository:
+
+---
+
 # Employee Management System
 
 A modern Employee Management System built with a React (Vite) frontend and Node.js/Express backend, designed to help organizations manage employee records, leave, and user access.
@@ -51,42 +55,43 @@ A modern Employee Management System built with a React (Vite) frontend and Node.
 
 ### Setup
 
-#### 1. Clone the repository
+1. **Clone the repository**
+    ```bash
+    git clone https://github.com/Muniafu/Employee-Management.git
+    cd Employee-Management
+    ```
 
-```bash
-git clone https://github.com/Muniafu/Employee-Management.git
-cd Employee-Management
-```
+2. **Install dependencies**
 
-#### 2. Install dependencies
+    **Backend**
+    ```bash
+    cd server
+    npm install
+    ```
 
-- **Backend**
-  ```bash
-  cd server
-  npm install
-  ```
-- **Frontend**
-  ```bash
-  cd ../client
-  npm install
-  ```
+    **Frontend**
+    ```bash
+    cd ../client
+    npm install
+    ```
 
-#### 3. Environment Variables
+3. **Environment Variables**
 
-Create a `.env` file in the `server` directory for backend configuration (e.g., MongoDB URI, JWT secret).
+    - Create a `.env` file in the `server` directory for backend configuration (e.g., MongoDB URI, JWT secret).
 
-#### 4. Run the Application
+4. **Run the Application**
 
-- **Backend**
-  ```bash
-  npm run dev
-  ```
-- **Frontend**
-  ```bash
-  npm run dev
-  ```
+    **Backend**
+    ```bash
+    npm run dev
+    ```
 
-Visit `http://localhost:3000` (or as configured) in your browser.
+    **Frontend**
+    ```bash
+    npm run dev
+    ```
+
+    - Visit `http://localhost:5000` (or as configured) in your browser.
 
 ---
 
@@ -130,3 +135,5 @@ This project is provided as-is without a license specified. Please add a license
 - [Muniafu](https://github.com/Muniafu)
 
 ---
+
+Feel free to further expand or update any section based on evolving project features or requirements!
