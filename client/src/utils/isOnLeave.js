@@ -1,106 +1,22 @@
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// First define the isOnLeave function
-const isOnLeave = (leaveDates, checkDate = new Date()) => {
-  try {
-    if (!Array.isArray(leaveDates)) {
-      toast.error('Invalid leave data format', {
-        position: 'top-right',
-        autoClose: 3000
-      });
-      return { isOnLeave: false };
-    }
-
-    const currentDate = new Date(checkDate);
-    let leaveStatus = false;
-    let leaveStart = null;
-    let leaveEnd = null;
-
-    for (const leave of leaveDates) {
-      if (!leave.startDate || !leave.endDate) continue;
-      
-      const startDate = new Date(leave.startDate);
-      const endDate = new Date(leave.endDate);
-
-      if (leave.status !== 'approved') continue;
-
-      if (currentDate >= startDate && currentDate <= endDate) {
-        leaveStatus = true;
-        leaveStart = startDate;
-        leaveEnd = endDate;
-        break;
-      }
-    }
-
-    return { 
-      isOnLeave: leaveStatus,
-      startDate: leaveStart,
-      endDate: leaveEnd
-    };
-  } catch (error) {
-    toast.error('Error checking leave status', {
-      position: 'top-right',
-      autoClose: 3000
-    });
-    console.error('Error in isOnLeave:', error);
-    return { isOnLeave: false };
-  }
-};
-
-// Then define userOnLeave which uses isOnLeave
-const userOnLeave = (employees) => {
-  try {
-    if (!Array.isArray(employees)) {
-      toast.error('Invalid employee data', {
-        position: 'top-right',
-        autoClose: 3000
-      });
-      return [];
-    }
-
-    const today = new Date();
-    const onLeaveUsers = [];
-
-    employees.forEach(emp => {
-      if (!emp.leaveDates || !Array.isArray(emp.leaveDates)) return;
-
-      const { isOnLeave, startDate, endDate } = isOnLeave(emp.leaveDates, today);
-
-      if (isOnLeave) {
-        onLeaveUsers.push({
-          id: emp._id,
-          name: emp.name,
-          image: emp.image,
-          position: emp.position,
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-          days: Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-        });
-      }
-    });
-
-    return onLeaveUsers;
-  } catch (error) {
-    toast.error('Error processing leave data', {
-      position: 'top-right',
-      autoClose: 3000
-    });
-    console.error('Error in userOnLeave:', error);
-    return [];
-  }
-};
-
-// Format date helper function
-const formatLeaveDate = (dateString) => {
-  try {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
-};
-
-// Export all functions at the end
-export { isOnLeave, userOnLeave, formatLeaveDate };
+export default function isOnLeave(leaveHistory = []) {
+  // Get today's date without time for accurate comparison
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Check each leave period
+  return leaveHistory.some(leave => {
+    // Skip if leave status is not accepted
+    if (leave.status !== 'accepted') return false;
+    
+    // Parse dates
+    const startDate = new Date(leave.startDate);
+    const endDate = new Date(leave.endDate);
+    
+    // Set time to midnight for consistent comparison
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    
+    // Check if today is between start and end dates (inclusive)
+    return today >= startDate && today <= endDate;
+  });
+}
