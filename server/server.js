@@ -13,7 +13,7 @@ const connectDb = require('./database/db');
 const superUserRoutes = require('./routes/super-user-routes');
 const userRoutes = require('./routes/user-routes');
 const leaveRoutes = require('./routes/leaveRoutes');
-const checkAuth = require('./middleware/check-auth');
+const { checkAuth } = require('./middleware/check-auth');
 
 const port = process.env.PORT || 5000;
 const app = express();
