@@ -1,7 +1,7 @@
 const express = require('express');
 const { check } = require('express-validator');
 const { newUser, loginUser, createFirstAdmin, getEmployees, deleteEmployee } = require('../controllers/userController');
-const { checkAuth,checkRole } = require('../middleware/check-auth');
+const { checkAuth, checkRole } = require('../middleware/check-auth');
 
 const router = express.Router();
 

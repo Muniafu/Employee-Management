@@ -5,10 +5,11 @@ const {
   editEmployee,
   getUserById,
   newUser,
-  loginUser
+  loginUser,
+  uploadAvatar
 } = require('../controllers/userController');
 const { singleUpload } = require('../middleware/file-upload');
-const checkAuth = require('../middleware/check-auth');
+const { checkAuth } = require('../middleware/check-auth');
 const { check } = require('express-validator');
 
 // Public routes
@@ -49,7 +50,7 @@ router.post(
   '/upload-avatar',
   checkAuth,
   singleUpload('avatar'),
-  uploadAvatarController
+  uploadAvatar
 );
 
 module.exports = router;
