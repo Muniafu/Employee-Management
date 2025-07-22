@@ -36,6 +36,9 @@ function App() {
             
             {/* Fallback Route */}
             <Route path="/" element={<Navigate to="/login" replace />} />
+
+            {/* Catch-all  for invalid routes*/}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

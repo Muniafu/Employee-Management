@@ -48,7 +48,6 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {        
       setLoading(true);
-      await login(data);
       const response = await API.auth.login({
         email: data.email,
         password: data.password
@@ -57,8 +56,14 @@ export default function Login() {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
+      login(response.data.user);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      
+      if (response.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/employee');
+      }
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

@@ -53,6 +53,14 @@ export const AuthProvider = ({ children }) => {
           role: parsedData.role,
         });
         api.defaults.headers.common['Authorization'] = `Bearer ${parsedData.token}`;
+
+        if (window.location.pathname === '/') {
+          if (parsedData.role === 'admin') {
+            window.location.href = '/admin';
+          } else  {
+            window.location.href = '/employee';
+          }
+        }
       } catch {
         logout();
       }
@@ -86,9 +94,12 @@ export const AuthProvider = ({ children }) => {
         role
       }));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 

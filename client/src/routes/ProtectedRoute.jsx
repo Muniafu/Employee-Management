@@ -1,7 +1,6 @@
 // routes/ProtectedRoute.jsx
 import { Navigate, useLocation } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
-import PropTypes from 'prop-types';
 import useAuth from '../Context/useAuth';
 
 /**
