@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const createHttpError = require('http-errors');
+const mongoose = require('mongoose');
 
 // Database and Routes
 const connectDb = require('./database/db');
