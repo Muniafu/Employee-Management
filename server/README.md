@@ -41,3 +41,25 @@ It provides APIs for authentication, employee data management, attendance, payro
 ---
 
 ## 📂 Project Structure (Backend)
+
+- **backend/**
+- **│── config/** # DB, JWT, logger configs
+- **│── controllers/** # Route controllers (business logic)
+- **│── middleware/** # Auth & error handling
+- **│── models/** # Mongoose schemas
+- **│── routes/** # Express routers
+- **│── utils/** # Helpers (email, notifications, response handler)
+- **│── server.js** # Server entry point
+- **│── .env** # Environment variables (ignored by git)
+- **│── package.json** # Dependencies & scripts
+
+
+---
+
+## ⚙️ Setup & Run
+
+### 1. Clone Repository
+- **```bash**
+
+  - git clone https://github.com/your-username/Employee-Management.git
+  - cd Employee-Management/server
