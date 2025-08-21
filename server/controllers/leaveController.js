@@ -1,142 +1,63 @@
-const userModel = require("../models/user");
+const LeaveModel = require('../models/Leave');
 
-const applyForLeave = async (req, res, next) => {
-  try {
-    const { uid } = req.params;
-    const { leaveDays, startDate, endDate, reason } = req.body;
+async function requestLeave(req, res) {
+    try {
+        const { employeeId, startDate, endDate, type, reason } = req.body;
+        if (!employeeId || !startDate || !endDate || !type) return res.status(400).json({ message: 'Missing required fields' });
 
-    const user = await userModel.findByIdAndUpdate(
-      uid,
-      {
-        $push: {
-          leaveDates: {
-            startDate,
-            endDate,
-            days: leaveDays,
-            reason,
-            status: "pending"
-          }
-        }
-      },
-      { new: true }
-    );
 
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: "User not found" 
-      });
+        const leave = new LeaveModel({ employee: employeeId, startDate, endDate, type, reason });
+        await leave.save();
+        return res.status(201).json({ message: 'Leave requested', leave });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
+}
 
-    res.status(200).json({
-      success: true,
-      message: "Leave application submitted",
-      leave: user.leaveDates.slice(-1)[0] // Return the newly added leave
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getPendingLeaves = async (req, res, next) => {
-  try {
-    const usersWithPendingLeaves = await userModel.find({
-      "leaveDates.status": "pending"
-    }).select("name email leaveDates");
-
-    const pendingLeaves = usersWithPendingLeaves.flatMap(user => 
-      user.leaveDates
-        .filter(leave => leave.status === "pending")
-        .map(leave => ({
-          userId: user._id,
-          userName: user.name,
-          userEmail: user.email,
-          ...leave.toObject()
-        }))
-    );
-
-    res.status(200).json({
-      success: true,
-      count: pendingLeaves.length,
-      leaves: pendingLeaves
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateLeaveStatus = async (req, res, next) => {
-  try {
-    const { leaveId } = req.params;
-    const { action } = req.body;
-
-    if (!["approve", "reject"].includes(action)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid action. Must be 'approve' or 'reject'" 
-      });
+async function getLeaves(req, res) {
+    try {
+        const { employeeId } = req.query;
+        const filter = employeeId ? { employee: employeeId } : {};
+        const leaves = await LeaveModel.find(filter).populate('employee').sort({ createdAt: -1 });
+        return res.json({ leaves });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error' });
     }
+}
 
-    const status = action === "approve" ? "approved" : "rejected";
+async function approveLeave(req, res) {
+    try {
+        const { id } = req.params;
+        const { action } = req.body;
+        if (!['approve', 'reject'].includes(action)) return res.status(400).json({ message: 'Invalid action' });
 
-    const user = await userModel.findOneAndUpdate(
-      { "leaveDates._id": leaveId },
-      {
-        $set: {
-          "leaveDates.$.status": status,
-          "leaveDates.$.processedAt": new Date()
-        }
-      },
-      { new: true }
-    );
+        const leave = await LeaveModel.findById(id);
+        if (!leave) return res.status(404).json({ message: 'Leave not found' });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "Leave not found"
-      });
+        leave.status = action === 'approve' ? 'Approved' : 'Rejected';
+        leave.approvedBy = req.user && req.user.id;
+        await leave.save();
+        
+        return res.json({ message: `Leave ${leave.status.toLowerCase()}`, leave });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error' });
+    }    
+}
+
+async function rejectLeave(req, res) {
+    try {
+        const { id } = req.params;
+        const leave = await LeaveModel.findById(id);
+        if (!leave) return res.status(404).json({ message: 'Leave not found' });
+
+        leave.status = 'Rejected';
+        leave.approvedBy = req.user && req.user.id;
+        await leave.save();
+
+        return res.json({ message: 'Leave rejected', leave });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error' });
     }
+}
 
-    const updatedLeave = user.leaveDates.id(leaveId);
-
-    res.status(200).json({
-      success: true,
-      message: `Leave ${status}`,
-      leave: updatedLeave
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getUserLeaves = async (req, res, next) => {
-  try {
-    const user = await userModel.findById(req.params.uid)
-      .select("leaveDates name email");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      leaves: user.leaveDates.map(leave =>({
-        ...leave.toObject(),
-        userName: user.name,
-        userEmail: user.email
-      }))
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = {
-  applyForLeave,
-  getPendingLeaves,
-  updateLeaveStatus,
-  getUserLeaves
-};
+module.exports = { requestLeave, getLeaves, approveLeave, rejectLeave };
