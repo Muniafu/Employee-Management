@@ -1,0 +1,43 @@
+/* Dashboard Layout */
+.dashboard-container {
+  @apply flex min-h-screen bg-gray-100;
+}
+
+.dashboard-sidebar {
+  @apply w-64 bg-white shadow-lg flex flex-col;
+}
+
+.dashboard-main {
+  @apply flex-1 p-6 overflow-y-auto;
+}
+
+/* Cards */
+.dashboard-card {
+  @apply bg-white rounded-2xl shadow p-4 hover:shadow-lg transition-all;
+}
+
+.dashboard-card h3 {
+  @apply text-lg font-semibold mb-2;
+}
+
+/* Table styles */
+.dashboard-table {
+  @apply w-full border border-gray-200 rounded-lg overflow-hidden;
+}
+
+.dashboard-table th {
+  @apply bg-gray-100 text-left px-4 py-2 font-semibold text-sm text-gray-700;
+}
+
+.dashboard-table td {
+  @apply px-4 py-2 border-t border-gray-200 text-sm;
+}
+
+/* Notification bell */
+.notification-bell {
+  @apply relative cursor-pointer;
+}
+
+.notification-bell span {
+  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full px-1;
+}
