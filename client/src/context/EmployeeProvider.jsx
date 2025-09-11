@@ -53,6 +53,9 @@ export const EmployeeProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // No token, skip fetching
+    
     fetchEmployees();
   }, []);
 

@@ -5,15 +5,29 @@ import { getEmployee, updateEmployee } from "../../api/employeeApi";
 export default function Profile() {
     const { user } = useContext(AuthContext);
     const [profile, setProfile] = useState(null);
+    const [allEmployees, setAllEmployees] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState("");
 
     useEffect(() => {
         async function load() {
-            if (!user) return;
-            // Prefer loading the Employee doc for richer fields
-            const res = await getEmployee(user.employeeId || user._id);
-            setProfile(res);
+            try {
+                if (user?.role === "Admin") {
+                    // Admin → fetch all employees
+                    const employees = await getEmployee();
+                    setAllEmployees(employees);
+                } else if (user?.employeeId) {
+                    // Employee → fetch own profile
+                    const emp = await getEmployee("me");
+                    setProfile(emp);
+                }
+            } catch (err) {
+                setError(err.message || "Failed to load profile");
+            } finally {
+                setLoading(false);
+            }
         }
         load();
     }, [user]);
@@ -44,7 +58,31 @@ export default function Profile() {
         }
     };
     
-    if (!profile) return <div className="p-6">Loading...</div>;
+    if (loading) return <div className="p-6">Loading...</div>;
+    if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+    // Admin view
+    if (user?.role === "Admin") {
+        return (
+            <div className="p-6">
+                <h1 className="text-2xl font-bold mb-4">Admin View - All Employees</h1>
+                {allEmployees.length === 0 ? (
+                    <ul className="space-y-2">
+                        {allEmployees.map((emp) => (
+                            <li key={emp._id} className="border p-4 rounded">
+                                {emp.name} - {emp.department?.name || "No Dept"}
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No employees found.</p>
+                )}
+            </div>
+        );
+    }
+
+    // Employee view
+    if (!profile) return <div className="p-6">No profile data.</div>;
 
     return (
         <div className="p-6 max-w-2xl">

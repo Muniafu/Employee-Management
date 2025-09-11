@@ -6,10 +6,10 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
-    role: "employee",
+    role: "Employee",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -49,10 +49,10 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
-            name="name"
-            value={form.name}
+            name="username"
+            value={form.username}
             onChange={handleChange}
-            placeholder="Full Name"
+            placeholder="Username"
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
             required
           />
@@ -80,8 +80,8 @@ export default function Register() {
             onChange={handleChange}
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
           >
-            <option value="employee">Employee</option>
-            <option value="admin">Admin</option>
+            <option value="Employee">Employee</option>
+            <option value="Admin">Admin</option>
           </select>
           <button
             type="submit"

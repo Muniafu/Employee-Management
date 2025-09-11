@@ -1,13 +1,13 @@
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import { login } from "../../api/authApi";
+//import { login } from "../../api/authApi";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,11 +21,11 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await login(form.email, form.password);
+      const res = await login(form.usernameOrEmail, form.password );
       if (res.success) {
-        localStorage.setItem("token", res.data.token);
-        setUser(res.data.user);
-        navigate(res.data.user.role === "admin" ? "/admin/dashboard" : "/employee/profile");
+        // User + token already handled in AuthProvider
+        const user = JSON.parse(localStorage.getItem("user"));
+        navigate(user.role === "Admin" ? "/admin/dashboard" : "/employee/profile");
       } else {
         setError(res.message || "Login failed");
       }
@@ -43,11 +43,11 @@ export default function Login() {
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="email"
-            name="email"
-            value={form.email}
+            type="text"
+            name="usernameOrEmail"
+            value={form.usernameOrEmail}
             onChange={handleChange}
-            placeholder="Email"
+            placeholder="Email or Username"
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
             required
           />
