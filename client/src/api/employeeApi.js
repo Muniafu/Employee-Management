@@ -20,6 +20,16 @@ function createClient2() {
 
 const http2 = createClient2();
 
+export async function getMyProfile() {
+  const { data } = await http2.get('/employees/me');
+  return data;
+}
+
+export async function updateMyProfile(payload) {
+  const { data } = await http2.put('/employees/me', payload);
+  return data;
+}
+
 export async function addEmployee(payload) {
     const { data } = await http2.post('/employees', payload);
     return data?.employee || data;
@@ -33,6 +43,11 @@ export async function getEmployees() {
 export async function getEmployee(id) {
     const { data } = await http2.get(`/employees/${id}`);
     return data?.employee || data;
+}
+
+export async function getMyEmployeeProfile() {
+  const { data } = await http2.get('/employees/me');
+  return data?.employee || data;
 }
 
 export async function updateEmployee(id, payload) {

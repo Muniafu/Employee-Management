@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tailwind:init": "tailwindcss init -p"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -19,6 +20,7 @@
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",
     "dayjs": "^1.11.13",
+    "lucide-react": "^0.541.0",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-icons": "^1.11.6",

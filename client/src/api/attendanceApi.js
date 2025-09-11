@@ -18,19 +18,28 @@ function createClient3() {
 
 const http3 = createClient3();
 
+// Clock In
 export async function clockIn(employeeId) {
     const { data } = await http3.post('/attendance/clock-in', { employeeId });
     return data?.attendance || data;
 }
 
+// Clock Out
 export async function clockOut(employeeId) {
     const { data } = await http3.post('/attendance/clock-out', { employeeId });
     return data?.attendance || data;
 }
 
+// Admin: view attendance of all employees
 export async function getAttendance() {
     const { data } = await http3.get('/attendance');
     return data;
+}
+
+// Employee self-service
+export async function getMyAttendance() {
+  const { data } = await http3.get("/attendance/me");
+  return data.attendance;
 }
 
 // Depending on your backend route, attempt both common patterns for flexibility.
