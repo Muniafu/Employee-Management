@@ -11,7 +11,7 @@ async function register (req, res) {
             return res.status(400).json({ message: 'Username, email, and password are required' });
         }
 
-        let employeeRwef = null;
+        let employeeRef = null;
         if (employeeId) {
             const emp = await Employee.findById(employeeId);
             if (!emp) return res.status(400).json({ message: 'Invalid employee ID' });
@@ -21,11 +21,35 @@ async function register (req, res) {
         const existing = await User.findOne({ $or: [{ username}, { email}] });
         if (existing) return res.status(409).json({ message: 'Username or email already exists' });
 
-        const user = new User({ username, email, password, role: role || 'Employee', employee: employeeRef });
+        const user = new User({ 
+            username, 
+            email, 
+            password, 
+            role: role || 'Employee', 
+            employee: employeeRef 
+        });
         await user.save();
 
+        const payload = {
+            _id: user._id,
+            role: user.role,
+            username: user.username,
+            email: user.email
+        };
+        if (user.employee) payload.employeeId = user.employee;
+
+        const token = generateToken(payload);
+
+        return res.status(201).json({ 
+            token, 
+            user: payload 
+        });
+
         logger.info(`User registered: ${user.username}`);
-        return res.status(201).json({ message: 'User registered', user: { id: user._id, username: user.username, email: user.email, role: user.role } });
+        return res.status(201).json({ 
+            message: 'User registered', 
+            user: { _id: user._id, username: user.username, email: user.email, role: user.role } 
+        });
     } catch (err) {
         logger.error('register error', err);
         return res.status(500).json({ message: 'Server error' });
@@ -35,15 +59,25 @@ async function register (req, res) {
 async function login(req, res) {
     try {
         const { usernameOrEmail, password } = req.body;
-        if (!usernameOrEmail || !password) return res.status(400).json({ message: 'usernameOrEmail and password required' });
+        if (!usernameOrEmail || !password) {
+            return res.status(400).json({ message: 'usernameOrEmail and password required' });
+        }
 
-        const user = await User.findOne({ $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] }).populate('employee');
+        const user = await User.findOne({ 
+            $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }] 
+        }).populate('employee');
+
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
         
         const isMatch = await user.comparePassword(password);
         if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
         
-        const payload = { id: user._id, role: user.role, username: user.username };
+        const payload = { 
+            _id: user._id, 
+            role: user.role, 
+            username: user.username,
+            email: user.email
+        };
         if (user.employee) payload.employeeId = user.employee._id;
 
         const token = generateToken(payload);

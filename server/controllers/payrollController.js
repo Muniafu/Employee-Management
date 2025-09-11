@@ -1,7 +1,7 @@
 const PayrollModel = require('../models/Payroll');
 const EmployeeModel2 = require('../models/Employee');
 
-
+// Admin-only: generate payroll for an employee for a specific month
 async function generatePayroll(req, res) {
     try {
         const { employeeId, month, year, baseSalary, bonuses = 0, deductions = 0 } = req.body;
@@ -24,7 +24,7 @@ async function generatePayroll(req, res) {
     }
 }
 
-
+// Admin: view payroll of any employee
 async function getPayrollForEmployee(req, res) {
     try {
         const { id } = req.params;
@@ -35,4 +35,16 @@ async function getPayrollForEmployee(req, res) {
     }
 }
 
-module.exports = { generatePayroll, getPayrollForEmployee };
+// Employee self-service
+async function getMyPayrolls(req, res) {
+  try {
+    if (!req.user.employee) return res.status(403).json({ message: 'No employee profile linked' });
+
+    const records = await PayrollModel.find({ employee: req.user.employee }).sort({ year: -1, month: -1 });
+    return res.json({ payrolls: records });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports = { generatePayroll, getPayrollForEmployee, getMyPayrolls };

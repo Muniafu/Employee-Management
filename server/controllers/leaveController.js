@@ -1,5 +1,20 @@
 const LeaveModel = require('../models/Leave');
 
+// Employee self-service
+async function getMyLeaves(req, res) {
+  try {
+    if (!req.user.employee) return res.status(403).json({ message: 'No employee profile linked' });
+
+    const leaves = await LeaveModel.find({ employee: req.user.employee })
+      .populate('employee')
+      .sort({ createdAt: -1 });
+
+    return res.json({ leaves });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
 async function requestLeave(req, res) {
     try {
         const { employeeId, startDate, endDate, type, reason } = req.body;
@@ -14,6 +29,7 @@ async function requestLeave(req, res) {
     }
 }
 
+// Admin-only view
 async function getLeaves(req, res) {
     try {
         const { employeeId } = req.query;
@@ -60,4 +76,4 @@ async function rejectLeave(req, res) {
     }
 }
 
-module.exports = { requestLeave, getLeaves, approveLeave, rejectLeave };
+module.exports = { getLeaves, requestLeave, getLeaves, approveLeave, rejectLeave };

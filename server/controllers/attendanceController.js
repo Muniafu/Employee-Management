@@ -50,7 +50,7 @@ async function clockOut(req, res) {
     }
 }
 
-
+// Admin: view attendance of any employee
 async function getAttendanceForEmployee(req, res) {
     try {
         const { id } = req.params;
@@ -61,4 +61,16 @@ async function getAttendanceForEmployee(req, res) {
     }
 }
 
-module.exports = { clockIn, clockOut, getAttendanceForEmployee };
+// Employee self-service
+async function getMyAttendance(req, res) {
+  try {
+    if (!req.user.employee) return res.status(403).json({ message: 'No employee profile linked' });
+
+    const records = await AttendanceModel.find({ employee: req.user.employee }).sort({ date: -1 });
+    return res.json({ attendance: records });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports = { clockIn, clockOut, getAttendanceForEmployee, getMyAttendance };

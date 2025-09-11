@@ -1,4 +1,8 @@
 const jwt = require('jsonwebtoken');
+const logger = require('./logger');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h'; // e.g. '1h', '2d'
 
 
 /**

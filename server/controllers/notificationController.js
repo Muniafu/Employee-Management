@@ -1,16 +1,12 @@
 const mongoose2 = require('mongoose');
 
 
-const NotificationSchema = new mongoose2.Schema(
-    {
-        title: { type: String, required: true },
-        message: { type: String, required: true },
-        recipient: { type: mongoose2.Schema.Types.ObjectId, ref: 'User' },
-        read: { type: Boolean, default: false },
-    }, { timestamps: true }
-);
-
-const Notification = mongoose2.models.Notification || mongoose2.model('Notification', NotificationSchema);
+const Notification = mongoose2.models.Notification || mongoose2.model('Notification', new mongoose2.Schema({
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  recipient: { type: mongoose2.Schema.Types.ObjectId, ref: 'User' },
+  read: { type: Boolean, default: false },
+}, { timestamps: true }));
 
 async function createNotification(req, res) {
     try {
@@ -25,6 +21,15 @@ async function createNotification(req, res) {
     }
 }
 
+// Employee self-service
+async function getMyNotifications(req, res) {
+  try {
+    const notes = await Notification.find({ recipient: req.user._id }).sort({ createdAt: -1 });
+    return res.json({ notifications: notes });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
 
 async function listNotifications(req, res) {
     try {
@@ -49,4 +54,4 @@ async function markAsRead(req, res) {
     }
 }
 
-module.exports = { createNotification, listNotifications, markAsRead };
+module.exports = { createNotification, getMyNotifications, listNotifications, markAsRead };

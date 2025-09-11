@@ -1,5 +1,6 @@
 const EmployeeModel = require('../models/Employee');
 const UserModel = require('../models/User');
+const Employee = require('../models/Employee');
 
 async function createEmployee(req, res) {
     try {
@@ -64,4 +65,34 @@ async function deleteEmployee(req, res) {
     }
 }
 
-module.exports = { createEmployee, listEmployees, getEmployeeById, updateEmployee, deleteEmployee };
+async function getMyProfile(req, res) {
+  try {
+    if (!req.user.employee) {
+      return res.status(403).json({ message: "No employee profile linked" });
+    }
+    const employee = await Employee.findById(req.user.employee).populate("department");
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+async function updateMyProfile(req, res) {
+      try {
+    if (!req.user.employee) {
+      return res.status(403).json({ message: "No employee profile linked" });
+    }
+    const updated = await Employee.findByIdAndUpdate(
+      req.user.employee,
+      req.body,
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Employee not found" });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+module.exports = { createEmployee, listEmployees, getEmployeeById, updateEmployee, deleteEmployee, getMyProfile, updateMyProfile };
