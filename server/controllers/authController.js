@@ -5,21 +5,35 @@ const { generateToken } = require("../config/jwt");
 
 async function register (req, res) {
     try {
-        const { username, email, password, role, employeeId } = req.body;
+        const { username, firstName, lastName, email, password, role, employeeId } = req.body;
 
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required' });
+        if (!username || !firstName || !lastName || !email || !password) {
+            return res.status(400).json({ message: 'Username, firstName, lastName, email, and password are required' });
         }
 
         let employeeRef = null;
         if (employeeId) {
+            // Admin manually links user to existing employee
             const emp = await Employee.findById(employeeId);
-            if (!emp) return res.status(400).json({ message: 'Invalid employee ID' });
+            if (!emp) 
+                return res.status(400).json({ message: 'Invalid employee ID' });
+            employeeRef = emp._id;
+        } else if (role === 'Employee') {
+            // Auto-create profile for employees
+            const emp = new Employee({
+                firstName,
+                lastName,
+                email,
+            });
+            await emp.save();
             employeeRef = emp._id;
         }
 
-        const existing = await User.findOne({ $or: [{ username}, { email}] });
-        if (existing) return res.status(409).json({ message: 'Username or email already exists' });
+        const existing = await User.findOne({ 
+            $or: [{ username}, { email}], 
+        });
+        if (existing) 
+            return res.status(409).json({ message: 'Username or email already exists' });
 
         const user = new User({ 
             username, 
@@ -31,24 +45,19 @@ async function register (req, res) {
         await user.save();
 
         const payload = {
-            _id: user._id,
+            id: user._id,
             role: user.role,
             username: user.username,
-            email: user.email
+            email: user.email,
+            employeeId: user.employee || null, // always present
         };
-        if (user.employee) payload.employeeId = user.employee;
 
         const token = generateToken(payload);
 
-        return res.status(201).json({ 
-            token, 
-            user: payload 
-        });
-
         logger.info(`User registered: ${user.username}`);
         return res.status(201).json({ 
-            message: 'User registered', 
-            user: { _id: user._id, username: user.username, email: user.email, role: user.role } 
+            token,
+            user: payload
         });
     } catch (err) {
         logger.error('register error', err);
@@ -73,12 +82,12 @@ async function login(req, res) {
         if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
         
         const payload = { 
-            _id: user._id, 
+            id: user._id, 
             role: user.role, 
             username: user.username,
-            email: user.email
+            email: user.email,
+            employeeId: user.employee ? user.employee._id : null, // always present
         };
-        if (user.employee) payload.employeeId = user.employee._id;
 
         const token = generateToken(payload);
 
@@ -96,9 +105,18 @@ async function getProfile(req, res) {
         if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
         const user = await User.findById(userId).select('-password').populate({ path: 'employee', populate: { path: 'department' } });
+
         if (!user) return res.status(404).json({ message: 'User not found' });
         
-        return res.json({ user });
+        return res.json({ 
+            user: {
+                id: user._id,
+                role: user.role,
+                username: user.username,
+                email: user.email,
+                employeeId: user.employee ? user.employee._id : null, // always present
+            },
+        });
     } catch (err) {
 
         logger.error('getProfile error', err);

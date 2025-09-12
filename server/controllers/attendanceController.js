@@ -73,4 +73,13 @@ async function getMyAttendance(req, res) {
   }
 }
 
-module.exports = { clockIn, clockOut, getAttendanceForEmployee, getMyAttendance };
+async function getAllAttendance(req, res) {
+    try {
+        const records = await AttendanceModel.find().populate("employee").sort({ date: -1 });
+        res.json({ attendance: records });
+    } catch (err) {
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+
+module.exports = { clockIn, clockOut, getAttendanceForEmployee, getMyAttendance, getAllAttendance };

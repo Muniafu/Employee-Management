@@ -35,6 +35,18 @@ async function getPayrollForEmployee(req, res) {
     }
 }
 
+// Admin: get all payrolls
+async function getAllPayrolls(req, res) {
+  try {
+    const records = await PayrollModel.find({})
+      .populate('employee')
+      .sort({ year: -1, month: -1 });
+    return res.json({ payrolls: records });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+}
+
 // Employee self-service
 async function getMyPayrolls(req, res) {
   try {
@@ -47,4 +59,4 @@ async function getMyPayrolls(req, res) {
   }
 }
 
-module.exports = { generatePayroll, getPayrollForEmployee, getMyPayrolls };
+module.exports = { generatePayroll, getPayrollForEmployee, getAllPayrolls, getMyPayrolls };
