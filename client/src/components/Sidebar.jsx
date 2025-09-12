@@ -9,7 +9,7 @@ export default function Sidebar() {
     <aside className="w-60 bg-gray-800 text-white h-screen p-4">
       <h2 className="text-xl font-bold mb-6">Dashboard</h2>
       <nav className="flex flex-col gap-3">
-        {user?.role === "admin" ? (
+        {user?.role === "Admin" ? (
           <>
             <Link to="/admin/dashboard" className="hover:text-blue-400">Overview</Link>
             <Link to="/admin/employees" className="hover:text-blue-400">Manage Employees</Link>
