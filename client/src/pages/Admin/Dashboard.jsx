@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getEmployees } from "../../api/employeeApi";
 import { getAttendance } from "../../api/attendanceApi";
-import { getPayrolls } from "../../api/payrollApi";
+import { getAllPayrolls } from "../../api/payrollApi";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ employees: 0, attendance: 0, payrolls: 0 });
@@ -10,7 +10,8 @@ export default function Dashboard() {
     async function fetchStats() {
       const emp = await getEmployees();
       const att = await getAttendance();
-      const pay = await getPayrolls();
+      const pay = await getAllPayrolls();
+
 
       setStats({
         employees: emp.success ? emp.data.length : 0,

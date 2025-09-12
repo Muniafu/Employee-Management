@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { getEmployee, updateEmployee } from "../../api/employeeApi";
+import { getEmployee, updateEmployee, getMyEmployeeProfile } from "../../api/employeeApi";
 
 export default function Profile() {
     const { user } = useContext(AuthContext);
@@ -20,7 +20,7 @@ export default function Profile() {
                     setAllEmployees(employees);
                 } else if (user?.employeeId) {
                     // Employee → fetch own profile
-                    const emp = await getEmployee("me");
+                    const emp = await getMyEmployeeProfile("me");
                     setProfile(emp);
                 }
             } catch (err) {

@@ -7,6 +7,8 @@ export default function Register() {
 
   const [form, setForm] = useState({
     username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     role: "Employee",
@@ -27,7 +29,7 @@ export default function Register() {
 
     try {
       const res = await register(form);
-      if (res.success) {
+      if (res && (res.user || res.token)) {
         setSuccess("Registration successful! Please login.");
         setTimeout(() => navigate("/login"), 1500);
       } else {
@@ -53,6 +55,24 @@ export default function Register() {
             value={form.username}
             onChange={handleChange}
             placeholder="Username"
+            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+            required
+          />
+          <input
+            type="text"
+            name="firstName"
+            value={form.firstName}
+            onChange={handleChange}
+            placeholder="First Name"
+            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+            required
+          />
+          <input
+            type="text"
+            name="lastName"
+            value={form.lastName}
+            onChange={handleChange}
+            placeholder="Last Name"
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
             required
           />
