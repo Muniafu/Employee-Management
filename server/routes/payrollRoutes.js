@@ -9,6 +9,7 @@ router.get('/me', protect, payrollController.getMyPayrolls);
 
 // Admin-only
 router.post('/', protect, adminOnly, payrollController.generatePayroll);
+router.get('/', protect, adminOnly, payrollController.getAllPayrolls);
 router.get('/:id', protect, adminOnly, payrollController.getPayrollForEmployee);
 
 module.exports = router;

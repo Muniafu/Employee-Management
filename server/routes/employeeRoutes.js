@@ -10,7 +10,7 @@ router.put('/me', protect, employeeController.updateMyProfile);
 // Admin-only routes
 router.post('/', protect, adminOnly, employeeController.createEmployee);
 router.get('/', protect, adminOnly, employeeController.listEmployees);
-router.get('/:id', protect, employeeController.getEmployeeById);
+router.get('/:id', protect, adminOnly, employeeController.getEmployeeById);
 router.put('/:id', protect, adminOnly, employeeController.updateEmployee);
 router.delete('/:id', protect, adminOnly, employeeController.deleteEmployee);
 
