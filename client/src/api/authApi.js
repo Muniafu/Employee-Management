@@ -30,8 +30,16 @@ export async function login({ usernameOrEmail, password }) {
     return data;
 }
 
-export async function register({ username, email, password, role = 'Employee', employeeId }) {
-    const { data } = await http.post('/auth/register', { username, email, password, role, employeeId });
+export async function register({ username,firstName, lastName, email, password, role = 'Employee', employeeId }) {
+    const { data } = await http.post('/auth/register', { 
+        username,
+        firstName,
+        lastName, 
+        email, 
+        password, 
+        role, 
+        employeeId 
+    });
     return data;
 }
 

@@ -35,6 +35,11 @@ export async function getPayrolls(employeeId) {
     return data?.payrolls || data;
 }
 
+export async function getAllPayrolls() {
+  const { data } = await http4.get("/payrolls");
+  return data?.payrolls || data;
+}
+
 // Employee self-service
 export async function getMyPayrolls() {
   const { data } = await http4.get("/payroll/me");

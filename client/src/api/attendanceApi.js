@@ -33,13 +33,13 @@ export async function clockOut(employeeId) {
 // Admin: view attendance of all employees
 export async function getAttendance() {
     const { data } = await http3.get('/attendance');
-    return data;
+    return data?.attendance || data;
 }
 
 // Employee self-service
 export async function getMyAttendance() {
   const { data } = await http3.get("/attendance/me");
-  return data.attendance;
+  return data.attendance || [];
 }
 
 // Depending on your backend route, attempt both common patterns for flexibility.
