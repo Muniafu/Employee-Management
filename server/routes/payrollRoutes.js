@@ -4,7 +4,6 @@ const payrollController = require('../controllers/payrollController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 // Employee self-service
-router.get('/me', protect, (req, res) => payrollController.getPayrollForEmployee(req, res));
 router.get('/me', protect, payrollController.getMyPayrolls);
 
 // Admin-only
