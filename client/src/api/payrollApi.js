@@ -27,21 +27,16 @@ export async function generatePayroll({ employeeId, month, year, baseSalary, bon
 
 export async function getPayrollForEmployee(employeeId) {
   const { data } = await http4.get(`/payroll/${employeeId}`);
-  return data.payrolls;
+  return data.payrolls || [];
 }
 
-export async function getPayrolls(employeeId) {
-    const { data } = await http4.get(`/payrolls/${employeeId}`);
-    return data?.payrolls || data;
-}
-
-export async function getAllPayrolls() {
-  const { data } = await http4.get("/payrolls");
-  return data?.payrolls || data;
+export async function getPayrolls() {
+    const { data } = await http4.get('/payrolls');
+    return data?.payrolls || [];
 }
 
 // Employee self-service
 export async function getMyPayrolls() {
   const { data } = await http4.get("/payroll/me");
-  return data.payrolls;
+  return data.payrolls || [];
 }
