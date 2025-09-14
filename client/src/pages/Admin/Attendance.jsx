@@ -14,26 +14,57 @@ export default function Attendance() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Attendance Records</h1>
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-2 py-1">Employee</th>
-            <th className="border px-2 py-1">Date</th>
-            <th className="border px-2 py-1">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((rec) => (
-            <tr key={rec._id}>
-              <td className="border px-2 py-1">{rec.employee?.name || "N/A"}</td>
-              <td className="border px-2 py-1">{new Date(rec.date).toLocaleDateString()}</td>
-              <td className="border px-2 py-1">{rec.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="container my-5">
+      <div className="card shadow-sm border-0">
+        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h1 className="h5 mb-0 fw-bold">📊 Attendance Records</h1>
+          <span className="badge bg-light text-primary fw-semibold">
+            {records.length} Records
+          </span>
+        </div>
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th scope="col">Employee</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.length > 0 ? (
+                  records.map((rec) => (
+                    <tr key={rec._id}>
+                      <td>{rec.employee?.name || "N/A"}</td>
+                      <td>{new Date(rec.date).toLocaleDateString()}</td>
+                      <td>
+                        <span
+                          className={`badge px-3 py-2 fw-semibold ${
+                            rec.status === "Present"
+                              ? "bg-success"
+                              : rec.status === "Absent"
+                              ? "bg-danger"
+                              : "bg-warning text-dark"
+                          }`}
+                        >
+                          {rec.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" className="text-center text-muted py-4">
+                      No attendance records available.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

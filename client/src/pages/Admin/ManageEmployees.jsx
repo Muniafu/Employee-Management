@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getEmployees, addEmployee, deleteEmployee } from "../../api/employeeApi";
+import {
+  getEmployees,
+  addEmployee,
+  deleteEmployee,
+} from "../../api/employeeApi";
 
 export default function ManageEmployees() {
   const [employees, setEmployees] = useState([]);
@@ -16,6 +20,7 @@ export default function ManageEmployees() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.name.trim() || !form.department.trim()) return;
     const res = await addEmployee(form);
     if (res.success) {
       setForm({ name: "", department: "" });
@@ -29,39 +34,67 @@ export default function ManageEmployees() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Manage Employees</h1>
-      <form onSubmit={handleSubmit} className="space-x-2 mb-4">
-        <input
-          type="text"
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border px-2 py-1 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Department"
-          value={form.department}
-          onChange={(e) => setForm({ ...form, department: e.target.value })}
-          className="border px-2 py-1 rounded"
-        />
-        <button type="submit" className="bg-blue-600 text-white px-3 py-1 rounded">
-          Add
-        </button>
+    <div className="container my-5">
+      <h1 className="fw-bold text-primary mb-4">👥 Manage Employees</h1>
+
+      {/* Employee Form */}
+      <form onSubmit={handleSubmit} className="row g-3 mb-4">
+        <div className="col-md-5">
+          <input
+            type="text"
+            placeholder="Employee Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="form-control"
+            aria-label="Employee Name"
+            required
+          />
+        </div>
+        <div className="col-md-5">
+          <input
+            type="text"
+            placeholder="Department"
+            value={form.department}
+            onChange={(e) => setForm({ ...form, department: e.target.value })}
+            className="form-control"
+            aria-label="Department"
+            required
+          />
+        </div>
+        <div className="col-md-2 d-grid">
+          <button type="submit" className="btn btn-success">
+            ➕ Add
+          </button>
+        </div>
       </form>
-      <ul className="space-y-2">
-        {employees.map((emp) => (
-          <li key={emp._id} className="flex justify-between bg-gray-100 p-2 rounded">
-            <span>{emp.name} - {emp.department?.name || "N/A"}</span>
-            <button
-              onClick={() => handleDelete(emp._id)}
-              className="text-red-600 hover:underline"
+
+      {/* Employee List */}
+      <ul className="list-group shadow-sm">
+        {employees.length > 0 ? (
+          employees.map((emp) => (
+            <li
+              key={emp._id}
+              className="list-group-item d-flex justify-content-between align-items-center"
             >
-              Delete
-            </button>
+              <span className="fw-medium">
+                {emp.name} —{" "}
+                <span className="text-muted">
+                  {emp.department?.name || "N/A"}
+                </span>
+              </span>
+              <button
+                onClick={() => handleDelete(emp._id)}
+                className="btn btn-sm btn-outline-danger"
+              >
+                🗑️ Delete
+              </button>
+            </li>
+          ))
+        ) : (
+          <li className="list-group-item text-muted fst-italic">
+            No employees yet. Add some above.
           </li>
-        ))}
+        )}
       </ul>
     </div>
   );

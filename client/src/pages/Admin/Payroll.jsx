@@ -9,8 +9,12 @@ export default function Payroll() {
   }, []);
 
   const loadPayrolls = async () => {
-    const res = await getPayrolls();
-    if (res.success) setPayrolls(res.data);
+    try {
+      const data = await getPayrolls();
+      setPayrolls(data);
+    } catch (error) {
+      console.error("Failed to load payrolls:", error);
+    }
   };
 
   return (
@@ -28,8 +32,8 @@ export default function Payroll() {
           {payrolls.map((pay) => (
             <tr key={pay._id}>
               <td className="border px-2 py-1">{pay.employee?.name || "N/A"}</td>
-              <td className="border px-2 py-1">${pay.amount}</td>
-              <td className="border px-2 py-1">{new Date(pay.date).toLocaleDateString()}</td>
+              <td className="border px-2 py-1">${pay.netSalary || pay.amount}</td>
+              <td className="border px-2 py-1">{new Date(pay.generatedAt || pay.date).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
