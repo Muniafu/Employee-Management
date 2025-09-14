@@ -11,6 +11,12 @@ async function register (req, res) {
             return res.status(400).json({ message: 'Username, firstName, lastName, email, and password are required' });
         }
 
+        // Email check only in User
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(409).json({ message: 'Usename or email already exists' });
+        }
+
         let employeeRef = null;
         if (employeeId) {
             // Admin manually links user to existing employee
@@ -18,43 +24,43 @@ async function register (req, res) {
             if (!emp) 
                 return res.status(400).json({ message: 'Invalid employee ID' });
             employeeRef = emp._id;
-        } else if (role === 'Employee') {
-            // Auto-create profile for employees
+        }
+
+        // Create User first
+        const user = new User({
+            username,
+            email,
+            password,
+            role: role || 'Employee'
+        });
+        await user.save();
+
+        // Auto- create Employee profile if Employee role and no employeeId
+        if (role === 'Employee' && !employeeId) {
             const emp = new Employee({
                 firstName,
                 lastName,
-                email,
+                user: user._id,
             });
             await emp.save();
             employeeRef = emp._id;
+
+            // Link back
+            user.employee = emp._id;
+            await user.save();
         }
-
-        const existing = await User.findOne({ 
-            $or: [{ username}, { email}], 
-        });
-        if (existing) 
-            return res.status(409).json({ message: 'Username or email already exists' });
-
-        const user = new User({ 
-            username, 
-            email, 
-            password, 
-            role: role || 'Employee', 
-            employee: employeeRef 
-        });
-        await user.save();
 
         const payload = {
             id: user._id,
             role: user.role,
             username: user.username,
             email: user.email,
-            employeeId: user.employee || null, // always present
+            employeeId: employeeRef,
         };
 
         const token = generateToken(payload);
-
         logger.info(`User registered: ${user.username}`);
+        
         return res.status(201).json({ 
             token,
             user: payload
