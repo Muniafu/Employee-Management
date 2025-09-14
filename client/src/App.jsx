@@ -4,6 +4,7 @@ import { EmployeeProvider } from "./context/EmployeeProvider";
 
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+import Landing from "./pages/Landing";
 
 // Admin Pages
 import Dashboard from "./pages/Admin/Dashboard";
@@ -24,8 +25,6 @@ import Announcements from "./pages/Employee/Announcements";
 import AdminLayout from "./components/AdminLayout";
 import EmployeeLayout from "./components/EmployeeLayout";
 
-import "./styles/globals.css";
-import "./styles/dashboard.css";
 
 //import useAuth from "./hooks/useAuth";
 
@@ -47,6 +46,7 @@ function App() {
         <Router>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
