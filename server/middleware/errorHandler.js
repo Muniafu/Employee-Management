@@ -7,10 +7,16 @@ const notFound = (req, res, next) => {
 
 // Centralized Error Handler
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
+  console.error(err);
+
+  if (err.code === 11000) {
+    return res.status(400).json({
+      message: `Duplicate field: ${Object.keys(err.keyValue).join(', ')} must be unique`
+    });
+  }
+
+  res.status(res.statusCode === 200 ? 500 : res.statusCode).json({
+    message: err.message || 'server Error',
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 };
