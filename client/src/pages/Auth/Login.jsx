@@ -1,7 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-//import { login } from "../../api/authApi";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -21,9 +20,8 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await login(form.usernameOrEmail, form.password );
+      const res = await login(form.usernameOrEmail, form.password);
       if (res.success) {
-        // User + token already handled in AuthProvider
         const user = JSON.parse(localStorage.getItem("user"));
         navigate(user.role === "Admin" ? "/admin/dashboard" : "/employee/profile");
       } else {
@@ -37,41 +35,85 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="usernameOrEmail"
-            value={form.usernameOrEmail}
-            onChange={handleChange}
-            placeholder="Email or Username"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Password"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        <p className="text-sm text-gray-600 mt-4 text-center">
-          Don’t have an account?{" "}
-          <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
-        </p>
+    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+      <div className="card shadow-lg border-0" style={{ maxWidth: "420px", width: "100%" }}>
+        <div className="card-body p-4">
+          <h2 className="card-title text-center mb-4 fw-bold text-primary">
+            Welcome Back 👋
+          </h2>
+
+          {error && (
+            <div className="alert alert-danger small text-center" role="alert">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* Username / Email */}
+            <div className="mb-3">
+              <label htmlFor="usernameOrEmail" className="form-label fw-semibold">
+                Email or Username
+              </label>
+              <input
+                type="text"
+                id="usernameOrEmail"
+                name="usernameOrEmail"
+                value={form.usernameOrEmail}
+                onChange={handleChange}
+                placeholder="Enter your email or username"
+                className="form-control"
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label fw-semibold">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                className="form-control"
+                required
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="d-grid mb-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary btn-lg fw-semibold"
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
+              </button>
+            </div>
+          </form>
+
+          <p className="text-center mt-3 text-muted">
+            Don’t have an account?{" "}
+            <Link to="/register" className="fw-semibold text-decoration-none text-success">
+              Register
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
