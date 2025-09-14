@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const EmployeeSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
     phone: { type: String },
     department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
     position: { type: String },
@@ -12,6 +11,7 @@ const EmployeeSchema = new mongoose.Schema({
     salary: { type: Number },
     address: { type: String },
     emergencyContact: { name: String, phone: String },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', uique: true },
 }, { timestamps: true }
 );
 
