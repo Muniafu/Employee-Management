@@ -1,88 +1,163 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { clockIn, clockOut, getAttendanceForEmployee, getAttendance, getMyAttendance } from "../../api/attendanceApi";
+import {
+  clockIn,
+  clockOut,
+  getAttendanceForEmployee,
+  getAttendance,
+  getMyAttendance,
+} from "../../api/attendanceApi";
 
 export default function AttendanceLog() {
-    const { user } = useContext(AuthContext);
-    const [records, setRecords] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState("");
+  const { user } = useContext(AuthContext);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-    const load = async () => {
-        if (!user) return;
-        const data = await getAttendanceForEmployee(user.employeeId || user._id);
-        setRecords(data?.data || data || []);
-    };
-    
-    useEffect(() => { 
-        async function load() {
-            try {
-                let data;
-                if (user?.role === "Admin") {
-                    // Admin → fetch all attendance records
-                    data = await getAttendance();
-                } else {
-                    // Employee → fetch own attendance records
-                    data = await getMyAttendance();
-                }
-                setRecords(data);
-            } catch (err) {
-                setError(err.message || "Failed to load attendance");
-            } finally {
-                setLoading(false);
-            }
+  const load = async () => {
+    if (!user) return;
+    const data = await getAttendanceForEmployee(user.employeeId || user._id);
+    setRecords(data?.data || data || []);
+  };
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        let data;
+        if (user?.role === "Admin") {
+          // Admin → fetch all attendance records
+          data = await getAttendance();
+        } else {
+          // Employee → fetch own attendance records
+          data = await getMyAttendance();
         }
-        load();
-    }, [user]);
+        setRecords(data);
+      } catch (err) {
+        setError(err.message || "Failed to load attendance");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [user]);
 
-    const handleClockIn = async () => {
-        setBusy(true);
-        try { await clockIn(user.employeeId || user._id); await load(); } finally { setBusy(false); }
-    };
-    const handleClockOut = async () => {
-        setBusy(true);
-        try { await clockOut(user.employeeId || user._id); await load(); } finally { setBusy(false); }
-    };
+  const handleClockIn = async () => {
+    setBusy(true);
+    try {
+      await clockIn(user.employeeId || user._id);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
 
-    if (loading) return <div className="p-6">Loading...</div>;
-    if (error) return <div className="p-6 text-red-600">{error}</div>;
+  const handleClockOut = async () => {
+    setBusy(true);
+    try {
+      await clockOut(user.employeeId || user._id);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
 
+  if (loading)
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Attendance Records</h1>
-            <div className="flex gap-3 mb-4">
-                <button onClick={handleClockIn} disabled={busy} className="bg-blue-600 text-white px-4 py-2 rounded">Clock In</button>
-                <button onClick={handleClockOut} disabled={busy} className="bg-gray-700 text-white px-4 py-2 rounded">Clock Out</button>
-            </div>
-            <table className="w-full border-collapse border">
-                <thead>
-                    <tr className="bg-gray-100">
-                        {user?.role === "Admin" && (
-                            <th className="border px-2 py-1">Employee</th>
-                        )}
-                        <th className="border px-2 py-1">Date</th>
-                        <th className="border px-2 py-1">Clock In</th>
-                        <th className="border px-2 py-1">Clock Out</th>
-                        <th className="border px-2 py-1">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {records.map((r) => (
-                        <tr key={r._id}>
-                            {user?.role === "Admin" && (
-                                <td className="border px-2 py-1">
-                                    {r.employee?.firstName} {r.employee?.lastName}
-                                </td>
-                            )}
-                            <td className="border px-2 py-1">{new Date(r.date || r.createdAt).toLocaleString()}</td>
-                            <td className="border px-2 py-1">{r.clockIn ? new Date(r.clockIn).toLocaleTimeString() : "-"}</td>
-                            <td className="border px-2 py-1">{r.clockOut ? new Date(r.clockOut).toLocaleTimeString() : "-"}</td>
-                            <td className="border px-2 py-1">{r.status || (r.clockOut ? "Present" : "Open")}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+      <div className="container py-5 text-center">
+        <div className="spinner-border text-primary" role="status"></div>
+        <p className="mt-3">Loading attendance records...</p>
+      </div>
     );
+
+  if (error)
+    return (
+      <div className="container py-5">
+        <div className="alert alert-danger">{error}</div>
+      </div>
+    );
+
+  return (
+    <div className="container py-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="fw-bold text-primary">
+          🕒 Attendance Records
+        </h1>
+        <div>
+          <button
+            onClick={handleClockIn}
+            disabled={busy}
+            className="btn btn-success me-2 fw-semibold"
+          >
+            {busy ? "Processing..." : "✅ Clock In"}
+          </button>
+          <button
+            onClick={handleClockOut}
+            disabled={busy}
+            className="btn btn-secondary fw-semibold"
+          >
+            {busy ? "Processing..." : "⏹ Clock Out"}
+          </button>
+        </div>
+      </div>
+
+      <div className="card shadow-sm border-0">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  {user?.role === "Admin" && <th scope="col">Employee</th>}
+                  <th scope="col">Date</th>
+                  <th scope="col">Clock In</th>
+                  <th scope="col">Clock Out</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((r) => (
+                  <tr key={r._id}>
+                    {user?.role === "Admin" && (
+                      <td>
+                        {r.employee?.firstName} {r.employee?.lastName}
+                      </td>
+                    )}
+                    <td>
+                      {new Date(r.date || r.createdAt).toLocaleDateString()}{" "}
+                      <span className="text-muted small">
+                        {new Date(r.date || r.createdAt).toLocaleTimeString()}
+                      </span>
+                    </td>
+                    <td>
+                      {r.clockIn
+                        ? new Date(r.clockIn).toLocaleTimeString()
+                        : "-"}
+                    </td>
+                    <td>
+                      {r.clockOut
+                        ? new Date(r.clockOut).toLocaleTimeString()
+                        : "-"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge rounded-pill ${
+                          r.status === "Absent"
+                            ? "bg-danger"
+                            : r.clockOut
+                            ? "bg-success"
+                            : "bg-warning text-dark"
+                        }`}
+                      >
+                        {r.status || (r.clockOut ? "Present" : "Open")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

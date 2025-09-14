@@ -2,11 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { getPayrolls } from "../../api/payrollApi";
 
-
 export default function Payslips() {
     const { user } = useContext(AuthContext);
     const [items, setItems] = useState([]);
-    
+
     useEffect(() => {
         async function load() {
             if (!user) return;
@@ -15,38 +14,53 @@ export default function Payslips() {
         }
         load();
     }, [user]);
-    
+
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Payslips</h1>
-                <table className="w-full border-collapse border">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border px-2 py-1">Month</th>
-                            <th className="border px-2 py-1">Year</th>
-                            <th className="border px-2 py-1">Base</th>
-                            <th className="border px-2 py-1">Bonuses</th>
-                            <th className="border px-2 py-1">Deductions</th>
-                            <th className="border px-2 py-1">Net</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.isArray(items) && items.length > 0 ? (
-                            items.map((p) => (
-                                <tr key={p._id}>
-                                    <td className="border px-2 py-1">{p.month}</td>
-                                    <td className="border px-2 py-1">{p.year}</td>
-                                    <td className="border px-2 py-1">{p.baseSalary}</td>
-                                    <td className="border px-2 py-1">{p.bonuses}</td>
-                                    <td className="border px-2 py-1">{p.deductions}</td>
-                                    <td className="border px-2 py-1 font-semibold">{p.netPay}</td>
+        <div className="container my-5">
+            <div className="card shadow-sm border-0">
+                <div className="card-body">
+                    <h1 className="h3 fw-bold text-primary mb-4">Payslips</h1>
+
+                    <div className="table-responsive">
+                        <table className="table table-hover align-middle text-center">
+                            <thead className="table-light sticky-top">
+                                <tr>
+                                    <th scope="col">Month</th>
+                                    <th scope="col">Year</th>
+                                    <th scope="col">Base</th>
+                                    <th scope="col">Bonuses</th>
+                                    <th scope="col">Deductions</th>
+                                    <th scope="col">Net</th>
                                 </tr>
-                            ))
-                        ) : (
-                        <tr><td className="border px-2 py-3 text-center" colSpan={6}>No payslips</td></tr>
-                    )}
-                </tbody>
-            </table>
+                            </thead>
+                            <tbody>
+                                {Array.isArray(items) && items.length > 0 ? (
+                                    items.map((p) => (
+                                        <tr key={p._id}>
+                                            <td>{p.month}</td>
+                                            <td>{p.year}</td>
+                                            <td className="text-muted">${p.baseSalary}</td>
+                                            <td className="text-success">+${p.bonuses}</td>
+                                            <td className="text-danger">-${p.deductions}</td>
+                                            <td className="fw-semibold text-success">${p.netPay}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="py-3 text-muted">
+                                            No payslips available
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p className="small text-muted mt-3">
+                        💡 Tip: Regularly reviewing payslips helps ensure transparency and financial awareness.
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
