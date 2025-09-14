@@ -1,37 +1,88 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
 
 export default function NotificationBell({ notifications = [] }) {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Split into unread + read
+  const unread = notifications.filter((n) => !n.read);
+  const read = notifications.filter((n) => n.read);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="relative">
+    <div className="position-relative" ref={dropdownRef}>
+      {/* Notification Button */}
       <button
+        type="button"
+        className="btn btn-light position-relative rounded-circle shadow-sm"
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-full hover:bg-gray-200"
+        aria-label="Notifications"
       >
-        <Bell className="h-6 w-6 text-gray-700" />
-        {notifications.length > 0 && (
-          <span className="absolute top-1 right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-            {notifications.length}
+        <Bell size={20} className="text-secondary" />
+        {unread.length > 0 && (
+          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {unread.length}
+            <span className="visually-hidden">unread notifications</span>
           </span>
         )}
       </button>
 
+      {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-50">
-          <ul className="max-h-60 overflow-y-auto">
-            {notifications.length > 0 ? (
-              notifications.map((note, i) => (
+        <div
+          className="dropdown-menu dropdown-menu-end shadow show mt-2 p-0 border-0 rounded"
+          style={{ width: "300px" }}
+        >
+          <ul className="list-group list-group-flush">
+            {/* Unread Section */}
+            <li className="list-group-item bg-light fw-bold small text-primary">
+              Unread
+            </li>
+            {unread.length > 0 ? (
+              unread.map((note, i) => (
                 <li
                   key={i}
-                  className="p-2 border-b last:border-none hover:bg-gray-100 text-sm"
+                  className="list-group-item d-flex align-items-start small bg-white"
                 >
-                  {note.message}
+                  <span className="me-2 text-primary fw-bold">•</span>
+                  <span>{note.message}</span>
                 </li>
               ))
             ) : (
-              <li className="p-2 text-gray-500 text-sm">No notifications</li>
+              <li className="list-group-item small text-muted text-center">
+                No unread notifications
+              </li>
+            )}
+
+            {/* Read Section */}
+            <li className="list-group-item bg-light fw-bold small text-secondary">
+              Read
+            </li>
+            {read.length > 0 ? (
+              read.map((note, i) => (
+                <li
+                  key={i}
+                  className="list-group-item d-flex align-items-start small text-muted"
+                >
+                  <span className="me-2 text-secondary">○</span>
+                  <span>{note.message}</span>
+                </li>
+              ))
+            ) : (
+              <li className="list-group-item small text-muted text-center">
+                No read notifications
+              </li>
             )}
           </ul>
         </div>
