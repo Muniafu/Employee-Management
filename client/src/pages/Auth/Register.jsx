@@ -11,6 +11,7 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
+    // role locked to employee for self-signup
     role: "Employee",
   });
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,10 @@ export default function Register() {
     setSuccess("");
 
     try {
-      const res = await register(form);
+      
+      // Force role = Employee always
+      const res = await register({ ...form, role: "Employee" });
+
       if (res && (res.user || res.token)) {
         setSuccess("Registration successful! Please login.");
         setTimeout(() => navigate("/login"), 1500);
@@ -150,7 +154,7 @@ export default function Register() {
             </div>
 
             {/* Role */}
-            <div className="mb-4">
+            {/*<div className="mb-4">
               <label htmlFor="role" className="form-label fw-semibold">
                 Role
               </label>
@@ -165,6 +169,7 @@ export default function Register() {
                 <option value="Admin">Admin</option>
               </select>
             </div>
+            */}
 
             {/* Submit Button */}
             <div className="d-grid mb-3">

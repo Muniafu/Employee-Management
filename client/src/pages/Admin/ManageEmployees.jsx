@@ -7,30 +7,71 @@ import {
 
 export default function ManageEmployees() {
   const [employees, setEmployees] = useState([]);
-  const [form, setForm] = useState({ name: "", department: "" });
+  const [withUser, setWithUser] = useState(false);
+  const [form, setForm] = useState({ 
+    firstName: "",
+    lastName: "",
+    email: "", 
+    username: "",
+    password: "",
+    department: "" 
+
+  });
 
   useEffect(() => {
     loadEmployees();
   }, []);
 
   const loadEmployees = async () => {
-    const res = await getEmployees();
-    if (res.success) setEmployees(res.data);
+    try {
+      const res = await getEmployees();
+      setEmployees(res || []);
+    } catch (err) {
+      console.error("Failed to load employees:", err.message);
+    }
+  };
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.department.trim()) return;
-    const res = await addEmployee(form);
-    if (res.success) {
-      setForm({ name: "", department: "" });
+    try {
+
+      // If withUser is false, strip out login fields
+      const payload = withUser ? form : {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        department: form.department,
+      };
+
+      await addEmployee(payload);
+
+      // Reset
+      setForm({ 
+        firstName: "", 
+        lastName: "", 
+        email: "",
+        username: "",
+        password: "", 
+        department: "" 
+      });
+      setWithUser(false);
       loadEmployees();
+    } catch (err) {
+      console.error(err.message);
+      alert(err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    await deleteEmployee(id);
-    loadEmployees();
+    try {
+      await deleteEmployee(id);
+      loadEmployees();
+    } catch (err) {
+      console.error("Delete failed:", err.message);
+    }
   };
 
   return (
@@ -39,28 +80,81 @@ export default function ManageEmployees() {
 
       {/* Employee Form */}
       <form onSubmit={handleSubmit} className="row g-3 mb-4">
-        <div className="col-md-5">
+        <div className="col-md-2">
           <input
             type="text"
-            placeholder="Employee Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            name="firstName"
+            placeholder="First Name"
+            value={form.firstName}
+            onChange={handleChange}
             className="form-control"
-            aria-label="Employee Name"
             required
           />
         </div>
-        <div className="col-md-5">
+        <div className="col-md-2">
           <input
             type="text"
-            placeholder="Department"
-            value={form.department}
-            onChange={(e) => setForm({ ...form, department: e.target.value })}
+            name="lastName"
+            placeholder="Last Name"
+            value={form.lastName}
+            onChange={handleChange}
             className="form-control"
-            aria-label="Department"
             required
           />
         </div>
+
+        {/* Toggle: wit or without User account */}
+        <div className="col-md-3 d-flex align-items-center">
+          <input 
+            type="checkbox"
+            id="withUser"
+            checked={withUser}
+            onChange={() => setWithUser(!withUser)}
+            className="form-check-input me-2" 
+          />
+          <label htmlFor="withUser" className="form-check-label fw-semibold">
+            Create login account
+          </label>
+        </div>
+
+        {withUser && (
+          <>
+            <div className="col-md-2">
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={form.username}
+              onChange={handleChange}
+              className="form-control"
+              required={withUser}
+            />
+          </div>
+          <div className="col-md-2">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              className="form-control"
+              required={withUser}
+            />
+          </div>
+          <div className="col-md-2">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="form-control"
+              required={withUser}
+            />
+          </div>
+          </>
+        )}
+        
         <div className="col-md-2 d-grid">
           <button type="submit" className="btn btn-success">
             ➕ Add
@@ -75,13 +169,19 @@ export default function ManageEmployees() {
             <li
               key={emp._id}
               className="list-group-item d-flex justify-content-between align-items-center"
-            >
-              <span className="fw-medium">
-                {emp.name} —{" "}
-                <span className="text-muted">
-                  {emp.department?.name || "N/A"}
-                </span>
-              </span>
+            >              
+              <div>
+                <strong>
+                  {emp.firstName} {emp.lastName}
+                </strong>{" "}
+                — {emp.department?.name || "No Department"}
+                <br />
+                <small className="text-muted">
+                  {emp.user
+                    ? `${emp.user.username} | ${emp.user.email} | Role: ${emp.user.role}`
+                    : "No user account linked"}
+                </small>
+              </div>
               <button
                 onClick={() => handleDelete(emp._id)}
                 className="btn btn-sm btn-outline-danger"
