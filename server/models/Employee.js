@@ -11,7 +11,8 @@ const EmployeeSchema = new mongoose.Schema({
     salary: { type: Number },
     address: { type: String },
     emergencyContact: { name: String, phone: String },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', uique: true },
+
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
 }, { timestamps: true }
 );
 
