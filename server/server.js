@@ -4,6 +4,9 @@ const dotenv = require('dotenv');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
+const http = require('http');
+const {Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 const logger = require('./config/logger');
 const { connectDB } = require('./config/db');
@@ -47,7 +50,11 @@ app.use('/api/notifications', notificationRoutes);
 
 // Health check / root
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'EMS Backend', env: process.env.NODE_ENV || 'development' });
+  res.json({ 
+    status: 'ok', 
+    service: 'EMS Backend', 
+    env: process.env.NODE_ENV || 'development' 
+  });
 });
 
 // Error handling middleware (404 + centralized error handler)
@@ -60,7 +67,45 @@ const PORT = parseInt(process.env.PORT, 10) || 5000;
 async function start() {
   try {
     await connectDB();
-    const server = app.listen(PORT, () => {
+    
+    // Create HTTp server & socket.io
+    const httpServer = http.createServer(app);
+    const io = new Server(httpServer, {
+      cors: {
+        origin: '*', // tighten in production
+      },
+    });
+
+    //Socket auth
+    io.use((socket, next) => {
+      try {
+        const token = socket.handshake.auth?.token;
+        if (!token) return next(new Error('Not authorized'));
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.userId = decoded.id;
+        next();
+      } catch (err) {
+        next (new Error('Invalid token'));
+      }
+    });
+
+    // Socket events
+    io.on('connection', (socket) => {
+      console.log(`🔌 User connected: ${socket.userId}`);
+
+      //Join user-specific room
+      socket.join(socket.userId);
+
+      socket.on('disconnect', () => {
+        console.log(`❌ User disconnected: ${socket.userId}`);
+      });
+    });
+
+    // Expose socket.io instance for controllers/services
+    app.set('io', io);
+
+    //Start server
+    httpServer.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} (pid: ${process.pid})`);
       console.log(`> Backend listening on http://localhost:${PORT}`);
     });
