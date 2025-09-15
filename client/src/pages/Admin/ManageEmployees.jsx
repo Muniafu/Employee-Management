@@ -25,7 +25,7 @@ export default function ManageEmployees() {
   const loadEmployees = async () => {
     try {
       const res = await getEmployees();
-      setEmployees(res || []);
+      setEmployees(res.employees || []);
     } catch (err) {
       console.error("Failed to load employees:", err.message);
     }
