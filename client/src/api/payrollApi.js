@@ -19,9 +19,9 @@ function createClient4() {
 
 const http4 = createClient4();
 
-// Admin-only: generate payroll for an employee for a specific month
+// Admin-only: generate payroll
 export async function generatePayroll({ employeeId, month, year, baseSalary, bonuses = 0, deductions = 0 }) {
-    const { data } = await http4.post('/payrolls', { employeeId, month, year, baseSalary, bonuses, deductions });
+    const { data } = await http4.post('/payroll', { employeeId, month, year, baseSalary, bonuses, deductions });
     return data?.payroll || data;
 }
 
@@ -31,7 +31,7 @@ export async function getPayrollForEmployee(employeeId) {
 }
 
 export async function getPayrolls() {
-    const { data } = await http4.get('/payrolls');
+    const { data } = await http4.get('/payroll');
     return data?.payrolls || [];
 }
 
