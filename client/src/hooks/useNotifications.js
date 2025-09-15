@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import { getMyNotifications, markAsRead } from "../api/notificationApi";
 
-const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const WS = import.meta.env.VITE_WS_BASE_URL || "http://localhost:5000";
 
 const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Fetch notifications from backend (fallback / sync)
   const fetchNotifications = async () => {
     try {
       const notes = await getMyNotifications();
@@ -19,7 +18,6 @@ const useNotifications = () => {
     }
   };
 
-  // Mark a notification as read
   const handleMarkAsRead = async (id) => {
     try {
       const updated = await markAsRead(id);
@@ -35,50 +33,21 @@ const useNotifications = () => {
   useEffect(() => {
     fetchNotifications();
 
-    // 🔌 Setup WebSocket connection
-    const socket = io(API.replace("/api", ""), {
-      auth: {
-        token: localStorage.getItem("token"),
-      },
+    const socket = io(WS, {
+      auth: { token: localStorage.getItem("token") },
     });
 
-    socket.on("connect", () => {
-      console.log("✅ Connected to notifications WS");
-    });
+    socket.on("connect", () => console.log("✅ WS connected"));
+    ["notification", "attendance", "leave", "payroll"].forEach((event) =>
+      socket.on(event, (note) => {
+        console.log(`📩 ${event}:`, note);
+        setNotifications((prev) => [note, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+      })
+    );
 
-    // Generic notifications (fallback)
-    socket.on("notification", (note) => {
-      console.log("📩 New notification:", note);
-      setNotifications((prev) => [note, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    });
+    socket.on("disconnect", () => console.warn("⚠️ WS disconnected"));
 
-    // Attendance notifications
-    socket.on("attendance", (note) => {
-      console.log("🕒 Attendance notification:", note);
-      setNotifications((prev) => [note, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    });
-
-    // Leave notifications
-    socket.on("leave", (note) => {
-      console.log("🏖️ Leave notification:", note);
-      setNotifications((prev) => [note, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    });
-
-    // Payroll notifications
-    socket.on("payroll", (note) => {
-      console.log("💰 Payroll notification:", note);
-      setNotifications((prev) => [note, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    });
-
-    socket.on("disconnect", () => {
-      console.warn("⚠️ Disconnected from notifications WS");
-    });
-
-    // Poll every 60s as a fallback (in case WS missed something)
     const interval = setInterval(fetchNotifications, 60000);
 
     return () => {
@@ -87,12 +56,7 @@ const useNotifications = () => {
     };
   }, []);
 
-  return {
-    notifications,
-    unreadCount,
-    fetchNotifications,
-    markAsRead: handleMarkAsRead,
-  };
+  return { notifications, unreadCount, fetchNotifications, markAsRead: handleMarkAsRead };
 };
 
 export default useNotifications;

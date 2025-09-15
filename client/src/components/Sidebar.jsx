@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 
 export default function Sidebar() {
   const { user } = useContext(AuthContext);
+  const role = user?.role?.toLowerCase();
 
   return (
     <>
@@ -16,7 +17,7 @@ export default function Sidebar() {
           Dashboard
         </h2>
         <nav className="nav flex-column gap-2">
-          {user?.role === "Admin" ? (
+          {role === "admin" ? (
             <>
               <Link to="/admin/dashboard" className="nav-link text-white fw-semibold hover-link">Overview</Link>
               <Link to="/admin/employees" className="nav-link text-white fw-semibold hover-link">Manage Employees</Link>
@@ -50,16 +51,14 @@ export default function Sidebar() {
           </h5>
           <button
             type="button"
-            className="btn btn-outline-light d-lg-none me-2"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#sidebarOffcanvas"
-            aria-controls="sidebarOffcanvas"
-            aria-label="Toggle sidebar"
-          ></button>
+            className="btn-close btn-close-white"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close sidebar"
+          />
         </div>
         <div className="offcanvas-body">
           <nav className="nav flex-column gap-2">
-            {user?.role === "Admin" ? (
+            {role === "admin" ? (
               <>
                 <Link to="/admin/dashboard" className="nav-link text-white fw-semibold hover-link" data-bs-dismiss="offcanvas">Overview</Link>
                 <Link to="/admin/employees" className="nav-link text-white fw-semibold hover-link" data-bs-dismiss="offcanvas">Manage Employees</Link>
