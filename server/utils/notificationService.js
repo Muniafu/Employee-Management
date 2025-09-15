@@ -1,16 +1,44 @@
+const Notification = require('../models/Notification');
+const { sendEmail } = require('./emailService');
+
+let ioInstance; // Socket.IO
+
+function initNotificationService(io) {
+  ioInstance = io;
+}
+
 /**
- * Simple in-app notification service
- * In a real-world app, could extend with WebSocket, push, or DB persistence
+ * Central notification sender
  */
-const sendNotification = async (userId, message) => {
+async function sendNotification({ userId, title, message, type = 'general', email }) {
   try {
-    console.log(`Notification to ${userId}: ${message}`);
-    // TODO: Save notification in DB if persistent storage is needed
-    return { userId, message, status: 'delivered' };
+    // Save in DB
+    const notification = await Notification.create({
+      title,
+      message,
+      recipient: userId,
+      type,
+    });
+
+    // Real-time push
+    if (ioInstance) {
+      ioInstance.to(userId.toString()).emit('notification', notification);
+    }
+
+    // Email fallback
+    if (email) {
+      await sendEmail({
+        to: email,
+        subject: title,
+        text: message,
+      });
+    }
+
+    return notification;
   } catch (error) {
     console.error('Notification error:', error);
     throw new Error('Notification could not be sent');
   }
-};
+}
 
-module.exports = { sendNotification };
+module.exports = { initNotificationService, sendNotification };
