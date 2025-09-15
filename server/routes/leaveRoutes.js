@@ -5,7 +5,7 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 // Employee self-service
 router.post('/', protect, leaveController.requestLeave);
-router.get('/me', protect, leaveController.getLeaves);
+router.get('/me', protect, leaveController.getMyLeaves);
 
 // Admin-only
 router.get('/', protect, adminOnly, leaveController.getLeaves);
