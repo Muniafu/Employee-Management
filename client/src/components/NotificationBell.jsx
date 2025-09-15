@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
+import useNotifications from "../hooks/useNotifications";
 
-export default function NotificationBell({ notifications = [] }) {
+export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Split into unread + read
+  const { notifications, unreadCount, markAsRead } = useNotifications();
+
   const unread = notifications.filter((n) => !n.read);
   const read = notifications.filter((n) => n.read);
 
@@ -30,9 +32,9 @@ export default function NotificationBell({ notifications = [] }) {
         aria-label="Notifications"
       >
         <Bell size={20} className="text-secondary" />
-        {unread.length > 0 && (
+        {unreadCount > 0 && (
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            {unread.length}
+            {unreadCount}
             <span className="visually-hidden">unread notifications</span>
           </span>
         )}
@@ -50,10 +52,11 @@ export default function NotificationBell({ notifications = [] }) {
               Unread
             </li>
             {unread.length > 0 ? (
-              unread.map((note, i) => (
+              unread.map((note) => (
                 <li
-                  key={i}
-                  className="list-group-item d-flex align-items-start small bg-white"
+                  key={note._id}
+                  className="list-group-item d-flex align-items-start small bg-white cursor-pointer"
+                  onClick={() => markAsRead(note._id)}
                 >
                   <span className="me-2 text-primary fw-bold">•</span>
                   <span>{note.message}</span>
@@ -70,9 +73,9 @@ export default function NotificationBell({ notifications = [] }) {
               Read
             </li>
             {read.length > 0 ? (
-              read.map((note, i) => (
+              read.map((note) => (
                 <li
-                  key={i}
+                  key={note._id}
                   className="list-group-item d-flex align-items-start small text-muted"
                 >
                   <span className="me-2 text-secondary">○</span>
