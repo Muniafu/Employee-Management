@@ -31,7 +31,7 @@ export default function Register() {
     try {
       
       // Force role = Employee always
-      const res = await register({ ...form, role: "Employee" });
+      const res = await register(form);
 
       if (res && (res.user || res.token)) {
         setSuccess("Registration successful! Please login.");

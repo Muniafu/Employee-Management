@@ -45,7 +45,7 @@ export default function AttendanceLog() {
   const handleClockIn = async () => {
     setBusy(true);
     try {
-      await clockIn(user.employeeId || user._id);
+      await clockIn(user.employee || user._id);
       await load();
     } finally {
       setBusy(false);
@@ -55,7 +55,7 @@ export default function AttendanceLog() {
   const handleClockOut = async () => {
     setBusy(true);
     try {
-      await clockOut(user.employeeId || user._id);
+      await clockOut(user.employee || user._id);
       await load();
     } finally {
       setBusy(false);

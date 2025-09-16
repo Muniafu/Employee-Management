@@ -36,7 +36,7 @@ export default function Attendance() {
                 {records.length > 0 ? (
                   records.map((rec) => (
                     <tr key={rec._id}>
-                      <td>{rec.employee?.name || "N/A"}</td>
+                      <td>{rec.employee ? `${rec.employee.firstName} ${rec.employee.lastName}` : "N/A"}</td>
                       <td>{new Date(rec.date).toLocaleDateString()}</td>
                       <td>
                         <span
