@@ -2,7 +2,7 @@ const Attendance = require('../models/Attendance');
 const Employee = require('../models/Employee');
 const { sendNotification } = require('../utils/notificationService');
 const { sendEmail } = require('../utils/emailService');
-
+const { successResponse, errorResponse } = require('../utils/responseHandler');
 
 async function clockIn(req, res) {
     try {
@@ -40,9 +40,9 @@ async function clockIn(req, res) {
             text: `Hi ${emp.firstName}, your clock-in at ${attendance.checkIn.toLocaleTimeString()} has been recorded.`
         });
 
-        return res.json({ message: 'Clocked in', attendance });
+        return successResponse(res, attendance, "Clocked in successfully");
     } catch (err) {
-        return res.status(500).json({ message: 'Server error', error: err.message });
+        return errorResponse(res, err);
     }
 }
 
@@ -80,9 +80,9 @@ async function clockOut(req, res) {
             text: `Hi ${emp.firstName}, your clock-out at ${attendance.checkOut.toLocaleTimeString()} has been recorded.`
         });
 
-        return res.json({ message: 'Clocked out', attendance });
+        return successResponse(res, attendance, "Clocked out successfully");
     } catch (err) {
-        return res.status(500).json({ message: 'Server error', error: err.message });
+        return errorResponse(res, err);
     }
 }
 
@@ -91,9 +91,10 @@ async function getAttendanceForEmployee(req, res) {
     try {
         const { id } = req.params;
         const records = await Attendance.find({ employee: id }).sort({ date: -1 });
-        return res.json({ attendance: records });
+        
+        return successResponse(res, records, "Attendance fetched");
     } catch (err) {
-        return res.status(500).json({ message: 'Server error' });
+        return errorResponse(res, err);
     }
 }
 
@@ -103,18 +104,20 @@ async function getMyAttendance(req, res) {
     if (!req.user.employee) return res.status(403).json({ message: 'No employee profile linked' });
 
     const records = await Attendance.find({ employee: req.user.employee }).sort({ date: -1 });
-    return res.json({ attendance: records });
+
+    return successResponse(res, records, "My attendance fetched");
   } catch (err) {
-    return res.status(500).json({ message: 'Server error' });
+    return errorResponse(res, err);
   }
 }
 
 async function getAllAttendance(req, res) {
     try {
         const records = await Attendance.find().populate("employee").sort({ date: -1 });
-        res.json({ attendance: records });
+
+        return successResponse(res, records, "All attendance fetched");
     } catch (err) {
-        return res.status(500).json({ message: 'Server error' });
+        return errorResponse(res, err);
     }
 }
 

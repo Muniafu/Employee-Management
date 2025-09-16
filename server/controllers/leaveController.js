@@ -1,112 +1,130 @@
-const Leave = require('../models/Leave');
-const { sendNotification } = require('../utils/notificationService');
-const Notification = require('../models/Notification')
+const Leave = require("../models/Leave");
+const { sendNotification } = require("../utils/notificationService");
+const Notification = require("../models/Notification");
 
-// Employee self-service
-async function getMyLeaves(req, res) {
-  try {
-    if (!req.user.employee) {
-        return res.status(403).json({ message: 'No employee profile linked' });
-    }
+// Utility wrapper for async controllers
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
-    const leaves = await Leave.find({ employee: req.user.employee })
-      .populate('employee')
-      .sort({ createdAt: -1 });
-
-    return res.json({ leaves });
-  } catch (err) {
-    return res.status(500).json({ message: 'Server error' });
+// Employee: View my leaves
+const getMyLeaves = asyncHandler(async (req, res) => {
+  if (!req.user.employee) {
+    return res.status(403).json({ success: false, message: "No employee profile linked" });
   }
-}
 
-async function requestLeave(req, res) {
-    try {
-        if(!req.user.employee) {
-            return res.status(403).json({ message: 'No employeeprofile linked' });
-        }
+  const leaves = await Leave.find({ employee: req.user.employee })
+    .populate("employee")
+    .sort({ createdAt: -1 });
 
-        const { startDate, endDate, type, reason } = req.body;
-        if (!startDate || !endDate || !type) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
+  return res.json({ success: true, data: leaves });
+});
 
-        const leave = new Leave({
-             employee: req.user.employee, 
-             startDate, 
-             endDate, 
-             type, 
-             reason 
-            });
-        await leave.save();
-        
-        //Notify admin(s) - optional
-        await Notification.create({
-            title: 'New Leave request',
-            message: `${req.user.name} requested ${type} leave from ${startDate} to ${endDate}`,
-            recipient: null, // could target Admin users if stored
-        });
+// Employee: Request leave
+const requestLeave = asyncHandler(async (req, res) => {
+  if (!req.user.employee) {
+    return res.status(403).json({ success: false, message: "No employee profile linked" });
+  }
 
-        return res.status(201).json({ message: 'Leave requested', leave });
-    } catch (err) {
-        return res.status(500).json({ message: 'Server error', error: err.message });
-    }
-}
+  const { startDate, endDate, type, reason } = req.body;
+  if (!startDate || !endDate || !type) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
 
-// Admin-only view
-async function getLeaves(req, res) {
-    try {
-        const { employeeId } = req.query;
-        const filter = employeeId ? { employee: employeeId } : {};
-        const leaves = await Leave.find(filter).populate('employee').sort({ createdAt: -1 });
-        return res.json({ leaves });
-    } catch (err) {
-        return res.status(500).json({ message: 'Server error' });
-    }
-}
+  const leave = await Leave.create({
+    employee: req.user.employee,
+    startDate,
+    endDate,
+    type,
+    reason,
+  });
 
-async function approveLeave(req, res) {
-    try {
-        const { id } = req.params;
-        const leave = await Leave.findById(id).populate('employee');
-        if (!leave) return res.status(404).json({ message: 'Leave not found' });
+  // Notify admins (optional)
+  await Notification.create({
+    title: "New Leave Request",
+    message: `${req.user.username} requested ${type} leave from ${new Date(startDate).toDateString()} to ${new Date(endDate).toDateString()}`,
+    recipient: null, // placeholder, can target Admin group
+    type: "leave",
+  });
 
-        leave.status = 'Approved';
-        leave.approvedBy = req.user && req.user.id;
-        await leave.save();
+  return res.status(201).json({
+    success: true,
+    message: "Leave requested successfully",
+    data: leave,
+  });
+});
 
-        // Notify employee
-        await Notification.create({
-            title: 'Leave Approved',
-            message: `Your ${leave.type} leave from ${leave.startDate.toDateString()} to ${leave.endDate.toDateString()} has been approved.`,
-        recipient: leave.employee.user, // assuming Employee has `user` ref
-        });
-        
-        return res.json({ message: `Leave ${leave.status.toLowerCase()}`, leave });
-    } catch (err) {
-        return res.status(500).json({ message: 'Server error' });
-    }    
-}
+// Admin: View all leaves or filter by employee
+const getLeaves = asyncHandler(async (req, res) => {
+  const { employeeId } = req.query;
+  const filter = employeeId ? { employee: employeeId } : {};
 
-async function rejectLeave(req, res) {
-    try {
-        const { id } = req.params;
-        const leave = await Leave.findById(id);
-        if (!leave) return res.status(404).json({ message: 'Leave not found' });
+  const leaves = await Leave.find(filter)
+    .populate("employee")
+    .sort({ createdAt: -1 });
 
-        leave.status = 'Rejected';
-        leave.approvedBy = req.user && req.user.id;
-        await leave.save();
-        
-        // Notify employee
-        await Notification.create({
-            title: 'Leave Rejected',
-            message: `Your ${leave.type} leave from ${leave.startDate.toDateString()} to ${leave.endDate.toDateString()} has been rejected.`,
-            recipient: leave.employee.user,
-        });
-        return res.json({ message: 'Leave rejected', leave });
-    } catch (err) {
-        return res.status(500).json({ message: 'Server error' });
-    }
-}
+  return res.json({ success: true, data: leaves });
+});
 
-module.exports = { getMyLeaves, requestLeave, getLeaves, approveLeave, rejectLeave };
+// Admin: Approve leave
+const approveLeave = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const leave = await Leave.findById(id).populate("employee");
+
+  if (!leave) {
+    return res.status(404).json({ success: false, message: "Leave not found" });
+  }
+
+  leave.status = "Approved";
+  leave.approvedBy = req.user._id;
+  await leave.save();
+
+  // Notify employee
+  await sendNotification({
+    userId: leave.employee.user,
+    title: "Leave Approved",
+    message: `Your ${leave.type} leave (${leave.startDate.toDateString()} - ${leave.endDate.toDateString()}) has been approved.`,
+    type: "leave",
+  });
+
+  return res.json({
+    success: true,
+    message: "Leave approved",
+    data: leave,
+  });
+});
+
+// Admin: Reject leave
+const rejectLeave = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const leave = await Leave.findById(id).populate("employee");
+
+  if (!leave) {
+    return res.status(404).json({ success: false, message: "Leave not found" });
+  }
+
+  leave.status = "Rejected";
+  leave.approvedBy = req.user._id;
+  await leave.save();
+
+  // Notify employee
+  await sendNotification({
+    userId: leave.employee.user,
+    title: "Leave Rejected",
+    message: `Your ${leave.type} leave (${leave.startDate.toDateString()} - ${leave.endDate.toDateString()}) has been rejected.`,
+    type: "leave",
+  });
+
+  return res.json({
+    success: true,
+    message: "Leave rejected",
+    data: leave,
+  });
+});
+
+module.exports = {
+  getMyLeaves,
+  requestLeave,
+  getLeaves,
+  approveLeave,
+  rejectLeave,
+};
