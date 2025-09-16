@@ -19,7 +19,10 @@ const app = express();
 
 // Basic middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -45,15 +48,17 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leaves', leaveRoutes);
-app.use('/api/payrolls', payrollRoutes);
+app.use('/api/payroll', payrollRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Health check / root
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ 
-    status: 'ok', 
+    status: 'ok',
+    ok: true, 
     service: 'EMS Backend', 
-    env: process.env.NODE_ENV || 'development' 
+    env: process.env.NODE_ENV || 'development',
+    time: new Date().toISOString(),
   });
 });
 
@@ -80,12 +85,13 @@ async function start() {
     io.use((socket, next) => {
       try {
         const token = socket.handshake.auth?.token;
-        if (!token) return next(new Error('Not authorized'));
+        if (!token) return next(new Error('Not token provided'));
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         socket.userId = decoded.id;
         next();
       } catch (err) {
-        next (new Error('Invalid token'));
+        console.warn("❌ Socket auth failed:", err.message);
+        return next(new Error("Invalid or expired token"));
       }
     });
 
@@ -113,11 +119,11 @@ async function start() {
     // Graceful shutdown handlers
     const shutdown = (signal) => {
       logger.info(`Received ${signal}. Closing server...`);
-      server.close(async () => {
+      httpServer.close(async () => {
         try {
           // close mongoose connection if open
           const mongoose = require('mongoose');
-          if (mongoose.connection && mongoose.connection.readyState === 1) {
+          if (mongoose.connection.readyState === 1) {
             await mongoose.connection.close(false);
             logger.info('MongoDB connection closed');
           }

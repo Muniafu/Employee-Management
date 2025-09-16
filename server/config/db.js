@@ -3,9 +3,6 @@ const logger = require('./logger'); // require logger to log DB events
 const dotenv = require('dotenv');
 
 
-dotenv.config();
-
-
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ems_db';
 
 
