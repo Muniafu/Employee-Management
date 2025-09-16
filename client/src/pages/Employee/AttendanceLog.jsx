@@ -1,9 +1,8 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import {
   clockIn,
   clockOut,
-  getAttendanceForEmployee,
   getAttendance,
   getMyAttendance,
 } from "../../api/attendanceApi";
@@ -14,39 +13,52 @@ export default function AttendanceLog() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const toastRef = useRef(null);
+
+    const showToast = (message, type = "success") => {
+    const toastEl = toastRef.current;
+    if (!toastEl) return;
+
+    toastEl.innerText = message;
+    toastEl.className = `toast align-items-center text-bg-${type} border-0 show position-fixed bottom-0 end-0 m-3`;
+    setTimeout(() => {
+      toastEl.className = "toast align-items-center text-bg-success border-0"; // hide after 3s
+    }, 3000);
+  };
 
   const load = async () => {
     if (!user) return;
-    const data = await getAttendanceForEmployee(user.employeeId || user._id);
-    setRecords(data?.data || data || []);
+
+    try {  
+      let res;
+      if (user.role === "Admin") {
+        res = await getAttendance(); // all employees
+      } else {
+        res = await getMyAttendance(); // self
+      }
+
+      if (res.success) {
+        setRecords(res.data);
+      } else {
+        setError(res.message || "Failed to load attendance");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load attendance");
+    }
   };
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        let data;
-        if (user?.role === "Admin") {
-          // Admin → fetch all attendance records
-          data = await getAttendance();
-        } else {
-          // Employee → fetch own attendance records
-          data = await getMyAttendance();
-        }
-        setRecords(data);
-      } catch (err) {
-        setError(err.message || "Failed to load attendance");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    load().finally(() => setLoading(false));
   }, [user]);
 
   const handleClockIn = async () => {
     setBusy(true);
     try {
-      await clockIn(user.employee || user._id);
+      const res = await clockIn(user.employeeId || user.employee);
       await load();
+      showToast(res.message, res.success ? "success" : "danger");
+    } catch (err) {
+      showToast(err.message || "Clock-in failed", "danger");
     } finally {
       setBusy(false);
     }
@@ -55,8 +67,11 @@ export default function AttendanceLog() {
   const handleClockOut = async () => {
     setBusy(true);
     try {
-      await clockOut(user.employee || user._id);
+      const res = await clockOut(user.employeeId || user.employee);
       await load();
+      showToast(res.message, res.success ? "success" : "danger");
+    }catch(err) {
+      showToast(err.message || "Clock-out failed", "danger");
     } finally {
       setBusy(false);
     }
@@ -65,6 +80,9 @@ export default function AttendanceLog() {
   if (loading)
     return (
       <div className="container py-5 text-center">
+        {/* Toast container */}
+        <div ref={toastRef} className="toast align-items-center text-bg-success border-0" />
+
         <div className="spinner-border text-primary" role="status"></div>
         <p className="mt-3">Loading attendance records...</p>
       </div>

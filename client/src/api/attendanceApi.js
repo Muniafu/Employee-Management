@@ -2,7 +2,7 @@ import api from "./api";
 
 export async function clockIn(employeeId) {
   const { data } = await api.post("/attendance/clock-in", { employeeId });
-  return data;
+  return data; // { success, message, data }
 }
 
 export async function clockOut(employeeId) {
@@ -17,7 +17,7 @@ export async function getAttendance() {
 
 export async function getMyAttendance() {
   const { data } = await api.get("/attendance/me");
-  return data;
+  return data; // { success, message, data }
 }
 
 export async function getAttendanceForEmployee(employeeId) {
