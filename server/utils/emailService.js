@@ -10,6 +10,8 @@ const transporter = nodemailer.createTransport({
 
 /**
  * Send email utility
+ * - Never throws, only logs errors
+ * - Always resolves so business logic continues
  */
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
@@ -20,11 +22,12 @@ const sendEmail = async ({ to, subject, text, html }) => {
       text,
       html,
     });
-    console.log('Email sent:', info.messageId);
-    return info;
+    console.log("📧 Email sent:", info.messageId);
+    return { success: true, info };
   } catch (error) {
-    console.error('Email error:', error);
-    throw new Error('Email could not be sent');
+    console.error("❌ Email failed:", error.message);
+    // Don't break business logiv
+    return { success: false, error: error.message };
   }
 };
 
