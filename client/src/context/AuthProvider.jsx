@@ -1,16 +1,30 @@
 import { useState, useEffect } from "react";
-import { login as loginApi, register as registerApi } from "../api/authApi";
+import { login as loginApi, register as registerApi, me as meApi } from "../api/authApi";
 import { AuthContext } from "./AuthContext";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      if (storedUser) setUser(storedUser);
-    }
+    const initAuth = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const currentUser = await meApi();
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } catch (err) {
+        console.error("❌ Auth check failed:", err.response?.data || err.message);
+        logout(); // invalid token → nuke it
+      } finally {
+        setLoading(false);
+      }
+    };
+    initAuth();
   }, [token]);
 
   const login = async (usernameOrEmail, password) => {
@@ -18,11 +32,11 @@ export const AuthProvider = ({ children }) => {
       const res = await loginApi({ usernameOrEmail, password });
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-      setUser(res.user);
       setToken(res.token);
+      setUser(res.user);
       return { success: true };
     } catch (err) {
-      return { success: false, message: err.message };
+      return { success: false, message: err.response?.data?.message || err.message };
     }
   };
 
@@ -31,11 +45,11 @@ export const AuthProvider = ({ children }) => {
       const res = await registerApi(formData);
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
-      setUser(res.user);
       setToken(res.token);
+      setUser(res.user);
       return { success: true };
     } catch (err) {
-      return { success: false, message: err.message };
+      return { success: false, message: err.response?.data?.message || err.message };
     }
   };
 
@@ -47,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

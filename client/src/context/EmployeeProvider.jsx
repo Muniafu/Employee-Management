@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   getEmployees,
   addEmployee,
@@ -6,18 +6,21 @@ import {
   deleteEmployee,
 } from "../api/employeeApi";
 import { EmployeeContext } from "./EmployeeContext";
+import { AuthContext } from "./AuthContext";
 
 export const EmployeeProvider = ({ children }) => {
+  const { token } = useContext(AuthContext);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchEmployees = async () => {
+    if (!token) return; // only fetch if authenticated
     setLoading(true);
     try {
       const data = await getEmployees();
       setEmployees(data);
     } catch (err) {
-      console.error("Error fetching employees:", err);
+      console.error("❌ Error fetching employees:", err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -28,7 +31,7 @@ export const EmployeeProvider = ({ children }) => {
       const newEmployee = await addEmployee(employeeData);
       setEmployees((prev) => [...prev, newEmployee]);
     } catch (err) {
-      console.error("Error adding employee:", err);
+      console.error("❌ Error adding employee:", err.response?.data || err.message);
     }
   };
 
@@ -39,7 +42,7 @@ export const EmployeeProvider = ({ children }) => {
         prev.map((emp) => (emp._id === id ? updated : emp))
       );
     } catch (err) {
-      console.error("Error updating employee:", err);
+      console.error("❌ Error updating employee:", err.response?.data || err.message);
     }
   };
 
@@ -48,16 +51,17 @@ export const EmployeeProvider = ({ children }) => {
       await deleteEmployee(id);
       setEmployees((prev) => prev.filter((emp) => emp._id !== id));
     } catch (err) {
-      console.error("Error deleting employee:", err);
+      console.error("❌ Error deleting employee:", err.response?.data || err.message);
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return; // No token, skip fetching
-    
-    fetchEmployees();
-  }, []);
+    if (token) {
+      fetchEmployees();
+    } else {
+      setEmployees([]); // clear when logged out
+    }
+  }, [token]);
 
   return (
     <EmployeeContext.Provider
